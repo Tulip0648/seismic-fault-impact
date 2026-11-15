@@ -1,5 +1,7 @@
 # Module 1: Geospatial Data Preprocessing & Feature Engineering
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Tulip0648/seismic-fault-impact/blob/main/module1/01_geospatial_preprocessing.ipynb)
+
 ## 1. Overview & Objectives
 Module 1 serves as the foundational data ingestion, cleaning, transformation, and feature engineering backbone for the entire **Seismological Fault Line Discovery & Earthquake Impact Profiling** project (BITSF464 Fall 2026).
 
@@ -11,7 +13,7 @@ Earthquake catalogs contain raw sensor measurements and spatial coordinates that
 3. **Geophysical Feature Scaling & Encoding**: Scale continuous sensor errors and wave residuals, and encode categorical sensor metadata (`magType`).
 4. **Dimensionality Reduction (PCA)**: Perform Principal Component Analysis on sensor and error features to capture dominant variance without collinearity.
 5. **Two-Stage Split Partitioning**: Establish a strict, stratified train/validation/test split on the target variable (`alert` / `mmi`) to prevent data leakage and provide the fixed data splits for all downstream modules.
-6. **Produce the Base Dataset**: Export the official **Base (Baseline)** feature splits and save preprocessing transformers for inference.
+6. **Produce the Base Dataset**: Export the official **Base (Baseline)** feature splits and save preprocessing transformers for downstream notebooks.
 
 ---
 
@@ -22,20 +24,21 @@ Earthquake catalogs contain raw sensor measurements and spatial coordinates that
 USGS ComCat Raw Data (ShakeMap + PAGER)
                  │
                  ▼
-     ┌───────────────────────┐
-     │       MODULE 1        │ <--- (YOU ARE HERE)
-     │ Geospatial & Sensors  │
-     └───────────┬───────────┘
-                 │
-                 ├──────────────────────────────────────┐
-                 │ Base Features (Train/Val/Test)       │ Spatial & PCA Features
-                 │ & Stratified Split Partitions        │
-                 ▼                                      ▼
-     ┌───────────────────────┐              ┌───────────────────────┐
-     │       MODULE 3        │              │       MODULE 2        │
-     │ Supervised Baselines  │              │ Unsupervised Fault    │
-     │ (Base Evaluation)     │              │ Discovery (Clusters)  │
-     └───────────────────────┘              └───────────────────────┘
+     ┌───────────────────────────────────┐
+     │             MODULE 1              │ <--- (YOU ARE HERE)
+     │ 01_geospatial_preprocessing.ipynb │
+     └─────────────────┬─────────────────┘
+                       │
+                       ├──────────────────────────────────────┐
+                       │ Base Features (Train/Val/Test)       │ Spatial & PCA Features
+                       │ & Stratified Split Partitions        │
+                       ▼                                      ▼
+     ┌───────────────────────────────────┐  ┌───────────────────────────────────┐
+     │             MODULE 3              │  │             MODULE 2              │
+     │ 03_supervised_predictive_         │  │ 02_unsupervised_fault_            │
+     │    modelling.ipynb                │  │    discovery.ipynb                │
+     │ (Base Evaluation)                 │  │ (Unsupervised Fault Discovery)    │
+     └───────────────────────────────────┘  └───────────────────────────────────┘
 ```
 
 ### Upstream Dependencies:
@@ -45,203 +48,160 @@ USGS ComCat Raw Data (ShakeMap + PAGER)
   - Impact Targets: `alert` (PAGER categorical severity: green, yellow, orange, red), `mmi` (ShakeMap continuous/discrete Modified Mercalli Intensity)
 
 ### Downstream Consumers:
-- **Module 2 (Unsupervised Fault Discovery)**: Consumes spatial coordinates (`lat_rad`, `lon_rad`, `x_ecef`, `y_ecef`, `z_ecef`, `depth`) and PCA components to discover tectonic fault clusters and compute posterior probabilities.
-- **Module 3 (Supervised Baselines)**: Consumes the **Base** train/val/test splits to establish Stage 1 baseline performance (linear, probabilistic, KNN, kernel models).
-- **Module 4 (Advanced Models & Integration)**: Consumes the **Base** splits to benchmark gradient boosting, tree ensembles, and neural networks against the augmented features.
+- **Module 2 Notebook (`02_unsupervised_fault_discovery.ipynb`)**: Consumes spatial coordinates (`lat_rad`, `lon_rad`, `x_ecef`, `y_ecef`, `z_ecef`, `depth`) and PCA components to discover tectonic fault clusters and compute posterior probabilities.
+- **Module 3 Notebook (`03_supervised_predictive_modelling.ipynb`)**: Consumes the **Base** train/val/test splits to establish Stage 1 baseline performance (linear, probabilistic, KNN, kernel models).
+- **Module 4 Notebook (`04_advanced_models_and_integration.ipynb`)**: Consumes the **Base** splits to benchmark gradient boosting, tree ensembles, and neural networks against the augmented features.
 
 ---
 
-## 3. Tasks & Implementation Checklist
+## 3. Environment Setup & Notebook Execution (Colab & Local)
 
-### Phase 1: Data Ingestion & Quality Audit
-- [ ] **Task 1.1: Data Acquisition Script**
-  - Implement USGS ComCat query fetcher or local raw data loader (`src/ingestion.py`).
-  - Filter events with valid ShakeMap (`mmi`) or PAGER (`alert`) target fields.
-- [ ] **Task 1.2: Data Sanity & Range Validation**
-  - Check latitude $\in [-90, 90]$, longitude $\in [-180, 180]$, depth $\ge 0$, magnitude $> 0$.
-  - Identify corrupted or outlier records (e.g. negative depth artifacts, synthetic test events).
-- [ ] **Task 1.3: Target Formatting & Class Definition**
-  - Standardize `alert` level classes: `['green', 'yellow', 'orange', 'red']` or map into ordinal integers.
-  - Retain `mmi` as continuous target variable for optional regression benchmarking.
+### 3.1 Running in Google Colab
+Every teammate can open the notebook directly using the Colab badge above or by navigating to `File -> Open notebook -> GitHub` in Colab and selecting `Tulip0648/seismic-fault-impact`.
 
-### Phase 2: Missing Value Imputation
-- [ ] **Task 2.1: Missingness Analysis**
-  - Profile missing value rates for `nst`, `gap`, `dmin`, `rms`, `horizontalError`, `depthError`, `magError`.
-- [ ] **Task 2.2: Imputation Pipeline**
-  - Implement and compare:
-    - Domain median imputation with missing indicator flags (`MissingIndicator`).
-    - Iterative Imputer (MICE) or KNN Imputer for sensor errors.
-  - **Critical Rule**: Imputers MUST be fit exclusively on the `train` split and applied to `val` and `test` to prevent data leakage.
+Paste this universal initialization cell at the very top of `01_geospatial_preprocessing.ipynb`:
 
-### Phase 3: Geospatial Coordinate Transformations
-- [ ] **Task 3.1: Spherical Radian Conversion**
-  - Convert `latitude` and `longitude` from degrees to radians:
+```python
+# Cell 1: Colab / Local Environment Setup
+import os, sys
+
+# Detect if running in Google Colab
+IN_COLAB = 'google.colab' in sys.modules
+
+if IN_COLAB:
+    print("Running in Google Colab. Setting up workspace...")
+    # Mount Google Drive for persistent artifact and dataset storage
+    from google.colab import drive
+    drive.mount('/content/drive')
+    
+    # Clone or update the GitHub repo in Colab
+    REPO_NAME = "seismic-fault-impact"
+    REPO_PATH = f"/content/{REPO_NAME}"
+    if not os.path.exists(REPO_PATH):
+        !git clone https://github.com/Tulip0648/seismic-fault-impact.git {REPO_PATH}
+    
+    %cd {REPO_PATH}/module1
+    !pip install -r ../requirements.txt -q
+    DATA_DIR = "../data"
+    ARTIFACTS_DIR = "./artifacts"
+else:
+    print("Running locally.")
+    DATA_DIR = "./data"
+    ARTIFACTS_DIR = "./artifacts"
+
+os.makedirs(f"{DATA_DIR}/raw", exist_ok=True)
+os.makedirs(f"{DATA_DIR}/processed", exist_ok=True)
+os.makedirs(ARTIFACTS_DIR, exist_ok=True)
+print(f"Workspace ready. Data directory: {DATA_DIR}")
+```
+
+### 3.2 Running in Local Jupyter (JupyterLab / VS Code)
+1. Clone the repository and navigate to the project directory:
+   ```bash
+   git clone https://github.com/Tulip0648/seismic-fault-impact.git
+   cd seismic-fault-impact
+   ```
+2. Create and activate a virtual environment:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+3. Launch Jupyter:
+   ```bash
+   jupyter lab
+   # Or open module1/01_geospatial_preprocessing.ipynb directly in VS Code
+   ```
+
+---
+
+## 4. Notebook Structure & Implementation Tasks
+
+The notebook `01_geospatial_preprocessing.ipynb` should be organized into the following sequential cells:
+
+- [ ] **Section 1: Data Ingestion & Schema Audit**
+  - Fetch/load raw USGS ComCat records with ShakeMap and PAGER attributes.
+  - Assert valid physical ranges: $\text{latitude} \in [-90, 90]$, $\text{longitude} \in [-180, 180]$, $\text{depth} \ge 0$, $\text{magnitude} > 0$.
+  - Clean corrupted or synthetic test events.
+  - Standardize target column `alert` (`green`, `yellow`, `orange`, `red`) and continuous `mmi`.
+
+- [ ] **Section 2: Missing Value Profiling & Imputation**
+  - Plot missing value bar chart / matrix for `nst`, `gap`, `dmin`, `rms`, `horizontalError`, `depthError`, `magError`.
+  - Fit `SimpleImputer(strategy='median')` or `IterativeImputer` **exclusively on the training split** to strictly prevent data leakage.
+  - Include missingness indicator columns (`MissingIndicator`).
+
+- [ ] **Section 3: Geospatial Coordinate Transformations**
+  - Convert angles from degrees to radians:
     $$\phi = \text{lat} \times \frac{\pi}{180}, \quad \lambda = \text{lon} \times \frac{\pi}{180}$$
-  - Needed for spherical distance algorithms (e.g., Haversine metric in DBSCAN).
-- [ ] **Task 3.2: 3D Earth-Centered Earth-Fixed (ECEF) Conversion**
-  - Convert coordinates to 3D Cartesian coordinates incorporating hypocentral depth:
-    $$x = (R - \text{depth}) \cdot \cos(\phi) \cdot \cos(\lambda)$$
-    $$y = (R - \text{depth}) \cdot \cos(\phi) \cdot \sin(\lambda)$$
-    $$z = (R - \text{depth}) \cdot \sin(\phi)$$
-    where $R \approx 6371.0 \text{ km}$ (mean Earth radius).
-  - This allows Euclidean distance calculations that respect true 3D spatial proximity inside the crust.
+  - Calculate 3D Earth-Centered Earth-Fixed (ECEF) Cartesian coordinates:
+    $$x = (R - \text{depth}) \cos(\phi) \cos(\lambda)$$
+    $$y = (R - \text{depth}) \cos(\phi) \sin(\lambda)$$
+    $$z = (R - \text{depth}) \sin(\phi)$$
+    where $R = 6371.0 \text{ km}$.
+  - Generate an interactive 3D scatter plot of hypocenters inside the Earth using Plotly or Matplotlib.
 
-### Phase 4: Feature Scaling & Encoding
-- [ ] **Task 4.1: Categorical Encoding**
-  - Encode `magType` (e.g., `mb`, `mw`, `ml`, `ms`) using `OneHotEncoder(handle_unknown='ignore')`.
-- [ ] **Task 4.2: Continuous Feature Normalization**
-  - Apply `RobustScaler` or `StandardScaler` to skewed sensor measurements (`gap`, `dmin`, `rms`, error metrics).
-  - Preserve physical units where needed for interpretability.
+- [ ] **Section 4: Categorical Encoding & Sensor Feature Scaling**
+  - One-hot encode `magType` (`OneHotEncoder(handle_unknown='ignore')`).
+  - Apply `RobustScaler` to skewed sensor and error metrics (`gap`, `dmin`, `rms`, `horizontalError`, `depthError`, `magError`).
 
-### Phase 5: Dimensionality Reduction (PCA)
-- [ ] **Task 5.1: Sensor Feature PCA**
-  - Fit `PCA` on sensor/error features (`nst`, `gap`, `dmin`, `rms`, `horizontalError`, `depthError`, `magError`).
-  - Determine optimal number of components explaining $\ge 85\%$ variance (typically 2 to 4 components).
-  - Generate component columns: `pca_sensor_1`, `pca_sensor_2`, etc.
-  - Save PCA loading matrix and explained variance plots.
+- [ ] **Section 5: Dimensionality Reduction (Sensor PCA)**
+  - Fit `PCA` on scaled sensor and error features.
+  - Plot the cumulative explained variance ratio curve.
+  - Select components explaining $\ge 85\%$ variance (typically 2 to 4 components) and append as `pca_sensor_1`, `pca_sensor_2`, etc.
 
-### Phase 6: Fixed Stratified Split Protocol
-- [ ] **Task 6.1: Stratified Splitter**
-  - Implement fixed train/val/test splitting (e.g., 70% train, 15% validation, 15% test) stratified on `alert` level.
-  - Seed: `random_state=42`.
-- [ ] **Task 6.2: Partition Serialization**
-  - Save output partitions as Parquet files:
+- [ ] **Section 6: Stratified Train / Val / Test Partitioning**
+  - Perform stratified split (70% train, 15% validation, 15% test) stratified on target variable `alert`.
+  - Fix random seed (`random_state=42`).
+  - Verify identical class proportions across train, val, and test partitions.
+
+- [ ] **Section 7: Artifact Serialization & Handoff**
+  - Export data partitions as high-performance Parquet files:
     - `data/processed/train_base.parquet`
     - `data/processed/val_base.parquet`
     - `data/processed/test_base.parquet`
-  - Export split indices (`train_idx.npy`, `val_idx.npy`, `test_idx.npy`) for verification across modules.
-
-### Phase 7: Pipeline Export & Documentation
-- [ ] **Task 7.1: Serialized Transformer Artifacts**
-  - Export full fitted pipeline (`artifacts/preprocessor.joblib`, `artifacts/pca_model.joblib`).
-- [ ] **Task 7.2: EDA & Feature Documentation Report**
-  - Generate automated summary report in `reports/eda_and_feature_report.md`.
+  - Export fitted transformer pipelines:
+    - `artifacts/preprocessor.joblib`
+    - `artifacts/pca_model.joblib`
+    - `artifacts/split_indices.json`
 
 ---
 
-## 4. Expected Deliverables
+## 5. Expected Deliverables
 
 ```
 module1/
-├── README.md                      # Module summary
-├── TODO.md                        # This specification file
+├── 01_geospatial_preprocessing.ipynb  # Primary self-contained Jupyter notebook
+├── TODO.md                            # This specification file
 ├── data/
-│   ├── raw/                       # Raw USGS ComCat records (.csv or .parquet)
-│   └── processed/                 # Generated Base partitions
+│   ├── raw/                           # Raw ComCat data
+│   └── processed/                     # Exported Base partitions
 │       ├── train_base.parquet
 │       ├── val_base.parquet
 │       └── test_base.parquet
 ├── artifacts/
-│   ├── preprocessor.joblib        # Fitted Scikit-Learn ColumnTransformer / Pipeline
-│   ├── pca_model.joblib           # Fitted PCA model
-│   └── split_indices.json         # Array of train/val/test index identifiers
-├── reports/
-│   ├── eda_and_feature_report.md  # Data audit, distributions, correlation analysis
-│   └── figures/                   # Missingness matrices, PCA variance curve, correlation heatmaps
-├── src/
-│   ├── __init__.py
-│   ├── ingestion.py               # USGS API / ComCat file loader
-│   ├── cleaning.py                # Range checks, missing value imputation
-│   ├── spatial_transform.py       # ECEF and spherical radian calculations
-│   ├── feature_engineering.py     # Categorical encoding, scaling, PCA extraction
-│   └── pipeline.py                # Unified end-to-end preprocessing pipeline & CLI
-└── tests/
-    ├── __init__.py
-    ├── test_spatial_transform.py  # Unit tests for ECEF / radian formulas
-    ├── test_cleaning.py           # Unit tests for imputation & leakage checks
-    └── test_pipeline.py           # End-to-end integration test
+│   ├── preprocessor.joblib            # Fitted Scikit-Learn transformer
+│   ├── pca_model.joblib               # Fitted PCA model
+│   └── split_indices.json             # Stratified indices
+└── reports/
+    ├── eda_and_feature_report.md      # Summary of distributions & correlations
+    └── figures/                       # Missingness plots, PCA scree plots, 3D hypocenters
 ```
 
 ---
 
-## 5. Module API & Interface Specification
+## 6. Notebook Inter-Module API & Data Contract
 
-Module 1 must expose both a Python programmatic API and a command-line interface (CLI).
+When teammates work across notebooks, they do not need to rerun previous notebooks. Instead, they consume the serialized data contracts produced by Module 1:
 
-### 5.1 Python API
-
-```python
-# module1/src/spatial_transform.py
-from typing import Tuple
-import numpy as np
-import pandas as pd
-
-class GeospatialTransformer:
-    """
-    Transforms lat/lon/depth coordinates into ECEF Cartesian (x, y, z) 
-    and spherical radians for clustering.
-    """
-    def __init__(self, earth_radius_km: float = 6371.0):
-        self.earth_radius_km = earth_radius_km
-
-    def transform_ecef(self, lat: np.ndarray, lon: np.ndarray, depth: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Returns (x, y, z) in kilometers."""
-        ...
-
-    def transform_radians(self, lat: np.ndarray, lon: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        """Returns (lat_rad, lon_rad) in radians."""
-        ...
-
-    def transform_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Appends ['x_ecef', 'y_ecef', 'z_ecef', 'lat_rad', 'lon_rad'] to DataFrame."""
-        ...
-```
+### 6.1 Data Contract (`train_base.parquet`, `val_base.parquet`, `test_base.parquet`)
 
 ```python
-# module1/src/pipeline.py
-from typing import Dict, Tuple, Optional
 import pandas as pd
-from sklearn.base import BaseEstimator, TransformerMixin
 
-class EarthquakeDataPipeline:
-    """
-    End-to-end preprocessing, feature engineering, and splitting pipeline.
-    """
-    def __init__(
-        self,
-        imputer_strategy: str = "median",
-        scaler_type: str = "robust",
-        n_pca_components: int = 3,
-        random_state: int = 42
-    ):
-        ...
-
-    def fit(self, df_train: pd.DataFrame, target_col: str = "alert") -> "EarthquakeDataPipeline":
-        """Fits imputation, scalers, encoders, and PCA on training data only."""
-        ...
-
-    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Transforms raw input DataFrame into Base feature format."""
-        ...
-
-    def fit_transform(self, df_train: pd.DataFrame, target_col: str = "alert") -> pd.DataFrame:
-        """Fits and transforms training partition."""
-        ...
-
-    def split_data(
-        self,
-        df: pd.DataFrame,
-        target_col: str = "alert",
-        test_size: float = 0.15,
-        val_size: float = 0.15
-    ) -> Dict[str, pd.DataFrame]:
-        """
-        Splits raw dataset into stratified train, val, and test subsets.
-        Returns dict with keys: 'train', 'val', 'test'.
-        """
-        ...
-
-    def save(self, filepath: str) -> None:
-        """Serializes the fitted pipeline to disk using joblib."""
-        ...
-
-    @classmethod
-    def load(cls, filepath: str) -> "EarthquakeDataPipeline":
-        """Loads a pre-trained pipeline artifact from disk."""
-        ...
+# Downstream notebooks load Module 1 outputs directly:
+df_train = pd.read_parquet("data/processed/train_base.parquet")
+print(df_train.shape, df_train.columns.tolist())
 ```
-
-### 5.2 DataFrame Schema Contract (`train_base.parquet`, `val_base.parquet`, `test_base.parquet`)
 
 | Column Name | Type | Description |
 |---|---|---|
@@ -249,8 +209,8 @@ class EarthquakeDataPipeline:
 | `latitude` | `float64` | Raw latitude in degrees |
 | `longitude` | `float64` | Raw longitude in degrees |
 | `depth` | `float64` | Focal hypocentral depth in km |
-| `lat_rad` | `float64` | Latitude in radians (for Haversine DBSCAN) |
-| `lon_rad` | `float64` | Longitude in radians (for Haversine DBSCAN) |
+| `lat_rad` | `float64` | Latitude in radians (for Haversine metric in M2) |
+| `lon_rad` | `float64` | Longitude in radians (for Haversine metric in M2) |
 | `x_ecef` | `float64` | Earth-Centered Earth-Fixed X in km |
 | `y_ecef` | `float64` | Earth-Centered Earth-Fixed Y in km |
 | `z_ecef` | `float64` | Earth-Centered Earth-Fixed Z in km |
@@ -258,38 +218,30 @@ class EarthquakeDataPipeline:
 | `magType_<type>` | `float64` | One-hot encoded magnitude types |
 | `nst` | `float64` | Number of seismic stations (imputed & scaled) |
 | `gap` | `float64` | Azimuthal gap in degrees (scaled) |
-| `dmin` | `float64` | Horizontal distance to nearest station (scaled) |
+| `dmin` | `float64` | Distance to nearest station (scaled) |
 | `rms` | `float64` | Wave travel time residual in seconds (scaled) |
 | `horizontalError`| `float64` | Location horizontal error in km (scaled) |
-| `depthError` | `float64` | Hypocentral depth error in km (scaled) |
+| `depthError` | `float64` | Depth error in km (scaled) |
 | `magError` | `float64` | Magnitude estimation error (scaled) |
 | `pca_sensor_1` | `float64` | 1st Principal Component of sensor features |
 | `pca_sensor_2` | `float64` | 2nd Principal Component of sensor features |
 | `pca_sensor_3` | `float64` | 3rd Principal Component of sensor features |
-| `mmi` | `float64` | Modified Mercalli Intensity (ShakeMap ground shaking) |
-| `alert` | `str` / `int`| PAGER impact severity level (`green`, `yellow`, `orange`, `red`) - **Primary Target** |
+| `mmi` | `float64` | Modified Mercalli Intensity |
+| `alert` | `str` / `int`| PAGER impact level (`green`, `yellow`, `orange`, `red`) — **Target** |
 
-### 5.3 CLI Interface
+### 6.2 Preprocessor Re-use Interface
 
-```bash
-# Run full preprocessing and splitting pipeline
-python -m module1.src.pipeline \
-    --input data/raw/usgs_comcat.csv \
-    --output-dir data/processed/ \
-    --artifacts-dir artifacts/ \
-    --target alert \
-    --test-size 0.15 \
-    --val-size 0.15 \
-    --pca-components 3
+```python
+import joblib
+
+# To transform unseen test data during inference:
+preprocessor = joblib.load("module1/artifacts/preprocessor.joblib")
+pca_model = joblib.load("module1/artifacts/pca_model.joblib")
 ```
 
 ---
 
-## 6. Validation & Quality Checks
-1. **Data Leakage Check**: Verify that scalers, imputers, and PCA matrices are computed solely from `train_base.parquet` and applied without re-fitting on `val` and `test`.
-2. **Stratification Check**: Compute class distribution ratios of `alert` across `train`, `val`, and `test`; ensure proportions match within $\pm 0.5\%$.
-3. **Spatial Transform Sanity**:
-   - For an equator point $(\text{lat}=0, \text{lon}=0, \text{depth}=0)$, $x = 6371.0, y = 0, z = 0$.
-   - For the North Pole $(\text{lat}=90, \text{lon}=0, \text{depth}=0)$, $x = 0, y = 0, z = 6371.0$.
-4. **Unit Tests**: Pass all tests in `tests/` with $\ge 90\%$ code coverage.
-
+## 7. Validation & Sanity Checklist
+1. **Zero Data Leakage**: Verify that scalers, imputers, and PCA matrices are computed solely from `train_base.parquet` and applied without re-fitting on `val` and `test`.
+2. **Stratification Quality**: Verify that `alert` class proportions match across train, val, and test splits within $\pm 0.5\%$.
+3. **Reproducibility Test**: In Jupyter/Colab, select **Kernel -> Restart Kernel and Run All Cells**; ensure the entire notebook executes without error from top to bottom.

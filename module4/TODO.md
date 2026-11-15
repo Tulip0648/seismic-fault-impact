@@ -1,5 +1,7 @@
 # Module 4: Advanced Models, Comparative Evaluation & Model Integration
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Tulip0648/seismic-fault-impact/blob/main/module4/04_advanced_models_and_integration.ipynb)
+
 ## 1. Overview & Objectives
 Module 4 represents the culminating modeling, evaluation, and system integration phase of the project. It builds upon the foundational baselines of Module 3 by developing high-capacity non-linear models, conducting a global comparative evaluation, integrating diverse models via ensemble learning and stacking, and providing the unified end-to-end inference API.
 
@@ -9,7 +11,7 @@ Module 4 represents the culminating modeling, evaluation, and system integration
 3. **Model Integration & Stacking**: Combine complementary model paradigms (linear, kernel, tree ensembles, and neural nets) using weighted soft-voting and Level-1 stacking meta-learners.
 4. **Global Comparative Leaderboard & Hypothesis Testing**: Construct the definitive benchmark comparing all models across Module 3 and Module 4; perform statistical significance tests (paired Wilcoxon / $5\times 2$ CV $t$-tests) to validate improvements.
 5. **Explainability & Feature Attribution (SHAP)**: Apply TreeSHAP and KernelSHAP to understand the real-world geological and sensor drivers of earthquake impact predictions.
-6. **Unified End-to-End Inference Pipeline**: Provide an integrated deployment interface that takes raw earthquake sensor inputs, transforms them through Modules 1 & 2, and produces final impact severity predictions.
+6. **Unified End-to-End Inference Pipeline**: Provide an interactive deployment cell and exportable pipeline class that takes raw earthquake sensor inputs, transforms them through Modules 1 & 2, and produces final impact severity predictions.
 
 ---
 
@@ -17,284 +19,209 @@ Module 4 represents the culminating modeling, evaluation, and system integration
 
 ### Overall Pipeline Position:
 ```
-     ┌───────────────────────┐              ┌───────────────────────┐
-     │       MODULE 1        │              │       MODULE 2        │
-     │ Base Splits &         │              │ Augmented Splits &    │
-     │ Fitted Preprocessor   │              │ Fitted Clusterers     │
-     └───────────┬───────────┘              └───────────┬───────────┘
-                 │                                      │
-                 │                                      │
-                 ├──────────────────┬───────────────────┤
-                 │                  │                   │
-                 ▼                  ▼                   │
-     ┌───────────────────────┐      │                   │
-     │       MODULE 3        │      │                   │
-     │ Baselines & Out-of-   │      │                   │
-     │ Fold (OOF) Probs      │      │                   │
-     └───────────┬───────────┘      │                   │
-                 │                  │                   │
-                 │ M3 OOF Probs     │ Base & Augmented  │
-                 │ & Baseline Scores│ Datasets          │
-                 ▼                  ▼                   ▼
-     ┌──────────────────────────────────────────────────────────────┐
-     │                           MODULE 4                           │ <--- (YOU ARE HERE)
-     │ - Gradient Boosters (LightGBM, XGBoost, CatBoost)            │
-     │ - Tree Ensembles (Random Forest, Extra Trees)                │
-     │ - Deep Neural Network (MLP / Residual Tabular Net)           │
-     │ - Stacking Meta-Learner (M3 + M4 Integrator)                 │
-     │ - Global Leaderboard & Statistical Significance Testing      │
-     │ - SHAP Attribution Analysis                                  │
-     │ - End-to-End Production Inference Pipeline                   │
-     └──────────────────────────────┬───────────────────────────────┘
-                                    │
-                                    ▼
-                      Final Project Deliverables:
-          End-to-End Predictor, Benchmark Leaderboard, Report
+     ┌───────────────────────────────────┐  ┌───────────────────────────────────┐
+     │             MODULE 1              │  │             MODULE 2              │
+     │ 01_geospatial_preprocessing.ipynb │  │ 02_unsupervised_fault_            │
+     │ (Base Splits & Preprocessor)      │  │    discovery.ipynb (Augmented)    │
+     └─────────────────┬─────────────────┘  └─────────────────┬─────────────────┘
+                       │                                      │
+                       ├──────────────────┬───────────────────┤
+                       │                  │                   │
+                       ▼                  ▼                   │
+     ┌───────────────────────────────────┐│                   │
+     │             MODULE 3              ││                   │
+     │ 03_supervised_predictive_         ││                   │
+     │    modelling.ipynb                ││                   │
+     │ (Baselines & OOF Probs)           ││                   │
+     └─────────────────┬─────────────────┘│                   │
+                       │                  │                   │
+                       │ M3 OOF Probs     │ Base & Augmented  │
+                       │ & Baseline Scores│ Datasets          │
+                       ▼                  ▼                   ▼
+     ┌──────────────────────────────────────────────────────────────────────────┐
+     │                                 MODULE 4                                 │ <--- (YOU ARE HERE)
+     │ 04_advanced_models_and_integration.ipynb                                 │
+     │ - Gradient Boosters (LightGBM, XGBoost, CatBoost)                        │
+     │ - Tree Ensembles (Random Forest, Extra Trees)                            │
+     │ - Deep Neural Network (PyTorch Tabular ResNet / MLP)                     │
+     │ - Stacking Meta-Learner (M3 + M4 Integrator)                             │
+     │ - Global Leaderboard & Statistical Significance Testing                  │
+     │ - SHAP Attribution Analysis                                              │
+     │ - End-to-End Interactive Inference Pipeline                              │
+     └─────────────────────────────────────┬────────────────────────────────────┘
+                                           │
+                                           ▼
+                             Final Project Deliverables:
+                 Interactive Predictor, Benchmark Leaderboard, Report
 ```
 
 ### Upstream Dependencies:
-1. **Module 1**:
-   - `module1/data/processed/train_base.parquet`, `test_base.parquet`
-   - `module1/artifacts/preprocessor.joblib`, `pca_model.joblib`
-2. **Module 2**:
-   - `module2/data/augmented/train_augmented.parquet`, `test_augmented.parquet`
-   - `module2/artifacts/dbscan_model.joblib`, `gmm_model.joblib`
-3. **Module 3**:
-   - `module3/artifacts/oof_predictions/oof_train_m3.parquet`, `oof_test_m3.parquet`
-   - `module3/reports/baseline_benchmarks.md`
-
-### Downstream Impact:
-Module 4 outputs the final artifacts, research conclusions, comparative tables, and interactive inference engine that fulfill the project proposal deliverables for course evaluation.
+1. **Module 1**: `data/processed/train_base.parquet`, `test_base.parquet`, `artifacts/preprocessor.joblib`
+2. **Module 2**: `data/augmented/train_augmented.parquet`, `test_augmented.parquet`, `artifacts/dbscan_model.joblib`, `artifacts/gmm_model.joblib`
+3. **Module 3**: `module3/artifacts/oof_predictions/oof_train_m3.parquet`, `oof_test_m3.parquet`
 
 ---
 
-## 3. Tasks & Implementation Checklist
+## 3. Environment Setup & Notebook Execution (Colab & Local)
 
-### Phase 1: Advanced Model Implementation & Tuning
-- [ ] **Task 1.1: Tree-Based Ensembles**
-  - Implement `RandomForestClassifier` and `ExtraTreesClassifier`.
-  - Hyperparameter tuning: `n_estimators`, `max_depth`, `min_samples_split`, `max_features`, and `class_weight='balanced_subsample'`.
-- [ ] **Task 1.2: Gradient Boosted Decision Trees (GBDT)**
-  - Implement **LightGBM** (`LGBMClassifier`): Fast histogram-based gradient boosting with leaf-wise splitting.
-  - Implement **XGBoost** (`XGBClassifier`): Exact/approximate tree boosting with depth-wise splitting and Hessian regularization.
-  - Implement **CatBoost** (`CatBoostClassifier`): Ordered boosting with robust handling of categorical sensor features (`magType`).
-  - Optimization: Use Optuna or Bayesian Optimization to tune learning rate, max depth, subsample ratio, colsample_bytree, and L1/L2 regularization.
-- [ ] **Task 1.3: Deep Neural Networks for Tabular Data**
-  - Implement a PyTorch (or scikit-learn / Keras) Multi-Layer Perceptron (MLP) architecture:
-    - Input dimension: $D$ (Base or Augmented feature count).
-    - Architecture: 3-4 dense layers with Batch Normalization, Dropout ($p=0.2-0.4$), and LeakyReLU / GELU activations.
-    - Residual skip connections (ResNet-style tabular block).
-    - Loss function: Cross-Entropy Loss with class weighting or Focal Loss to handle severe class imbalance.
+### 3.1 Running in Google Colab (GPU Recommended)
+Because Module 4 trains LightGBM, XGBoost, CatBoost, and PyTorch Neural Networks, using a GPU runtime is strongly recommended:
+* In Colab, go to **Runtime -> Change runtime type -> Hardware accelerator -> T4 GPU**.
+
+Paste this initialization cell at the top of `04_advanced_models_and_integration.ipynb`:
+
+```python
+# Cell 1: Colab / Local Setup with GPU Acceleration Check
+import os, sys, torch
+
+IN_COLAB = 'google.colab' in sys.modules
+
+if IN_COLAB:
+    print("Running in Google Colab. Setting up workspace...")
+    from google.colab import drive
+    drive.mount('/content/drive')
+    
+    REPO_NAME = "seismic-fault-impact"
+    REPO_PATH = f"/content/{REPO_NAME}"
+    if not os.path.exists(REPO_PATH):
+        !git clone https://github.com/Tulip0648/seismic-fault-impact.git {REPO_PATH}
+    
+    %cd {REPO_PATH}/module4
+    !pip install -r ../requirements.txt -q
+    DATA_BASE_DIR = "../data/processed"
+    DATA_AUG_DIR = "../data/augmented"
+    M3_OOF_DIR = "../module3/artifacts/oof_predictions"
+    ARTIFACTS_DIR = "./artifacts"
+else:
+    print("Running locally.")
+    DATA_BASE_DIR = "../module1/data/processed"
+    DATA_AUG_DIR = "../module2/data/augmented"
+    M3_OOF_DIR = "../module3/artifacts/oof_predictions"
+    ARTIFACTS_DIR = "./artifacts"
+
+os.makedirs(ARTIFACTS_DIR, exist_ok=True)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"PyTorch using device: {device}")
+```
+
+### 3.2 Running in Local Jupyter
+```bash
+cd seismic-fault-impact/module4
+jupyter lab
+```
+
+---
+
+## 4. Notebook Structure & Implementation Tasks
+
+The notebook `04_advanced_models_and_integration.ipynb` should be organized into the following sequential sections:
+
+- [ ] **Section 1: Data Ingestion & Alignment**
+  - Load Base splits (`train_base`, `test_base`), Augmented splits (`train_augmented`, `test_augmented`), and Module 3 OOF probability matrices.
+  - Assert that all row indices match across partitions.
+
+- [ ] **Section 2: Advanced Tree Ensembles & Gradient Boosters**
+  - Implement `RandomForestClassifier` and `ExtraTreesClassifier` with cost-sensitive subsample weighting.
+  - Implement **LightGBM**, **XGBoost**, and **CatBoost**:
+    - Tune learning rates, tree depth, regularization (L1/L2), and feature subsampling.
+    - Train on GPU if available (`device='cuda'` or `tree_method='gpu_hist'`).
+
+- [ ] **Section 3: Deep Neural Network (PyTorch Tabular ResNet / MLP)**
+  - Implement a PyTorch Multi-Layer Perceptron architecture:
+    - Dense blocks with Batch Normalization, Dropout ($p=0.3$), and LeakyReLU / GELU.
+    - Tabular residual connections.
+    - Class-weighted Cross-Entropy Loss or Focal Loss.
     - Optimizer: AdamW with Cosine Annealing learning rate schedule.
 
-### Phase 2: Two-Stage Evaluation of Advanced Models
-- [ ] **Task 2.1: Stage 1 (Base Dataset Benchmarking)**
-  - Train all advanced models on `train_base.parquet` and evaluate on `test_base.parquet`.
+- [ ] **Section 4: Two-Stage Benchmarking of Advanced Models**
+  - Train all advanced models on Base vs Augmented datasets.
   - Record Macro F1, Weighted F1, Multi-class ROC-AUC, and log loss.
-- [ ] **Task 2.2: Stage 2 (Augmented Dataset Benchmarking)**
-  - Train all advanced models on `train_augmented.parquet` and evaluate on `test_augmented.parquet`.
-  - Quantify performance deltas ($\Delta \text{Macro F1}$, $\Delta \text{ROC-AUC}$).
-  - Document findings: Do gradient boosters extract fault patterns on their own, or does explicit tectonic domain features (M2) provide statistically significant lifts?
+  - Quantify performance deltas: Does explicit fault line proximity provide a statistically significant edge over raw coordinates for high-capacity gradient boosters?
 
-### Phase 3: Model Integration & Ensembling
-- [ ] **Task 3.1: Soft-Voting Ensemble**
-  - Implement `WeightedVotingClassifier` combining top diverse models (e.g. LightGBM, Random Forest, SVM, MLP).
-  - Optimize ensemble weights via Nelder-Mead optimization on the validation split.
-- [ ] **Task 3.2: Stacking Meta-Learner (Level-1 Ensemble)**
-  - Collect out-of-fold probability predictions from:
-    - Module 3 Level-0 models (Logistic Regression, Kernel SVM, $k$-NN, LDA).
-    - Module 4 Level-0 models (Random Forest, LightGBM, XGBoost, MLP).
-  - Train a regularized meta-learner (e.g., Logistic Regression with L2 penalty or shallow Gradient Booster) on the concatenated probability matrix.
-  - Evaluate stacked ensemble on the test set.
+- [ ] **Section 5: Model Integration & Stacking Ensembles**
+  - **Soft Voting Classifier**: Weighted probability averaging across diverse models (e.g. LightGBM + Random Forest + SVM + MLP).
+  - **Level-1 Stacking Meta-Learner**:
+    - Concatenate OOF probability features from Module 3 (Logistic, SVM, $k$-NN, LDA) and Module 4 (Random Forest, LightGBM, MLP).
+    - Train a regularized meta-learner (e.g., Logistic Regression L2 or shallow LightGBM) on the stacked probability matrix.
+    - Evaluate stacked meta-learner on test partition.
 
-### Phase 4: Comprehensive System Benchmarking & Statistical Verification
-- [ ] **Task 4.1: Unified Global Comparative Leaderboard**
-  - Combine all evaluation records from Module 3 (Linear, Probabilistic, KNN, SVM) and Module 4 (RF, GBDT, MLP, Voting, Stacking) across both Base and Augmented datasets into a master comparison table.
-  - Highlight best-in-class models by metric.
-- [ ] **Task 4.2: Statistical Significance Testing**
-  - Conduct paired Wilcoxon signed-rank tests or $5\times 2$ cross-validated paired $t$-tests on fold-level Macro F1 scores between Base and Augmented variants.
-  - Report $p$-values to formally establish statistical significance of the unsupervised fault discovery module.
+- [ ] **Section 6: Master Comparative Leaderboard & Statistical Significance**
+  - Compile the master evaluation table aggregating all models from Module 3 & Module 4 across Base and Augmented configurations.
+  - Perform paired Wilcoxon signed-rank test or $5\times 2$ CV paired $t$-test on fold Macro F1 scores to prove whether unsupervised fault discovery yields statistically significant improvement ($p < 0.05$).
 
-### Phase 5: Interpretability & Feature Attribution (SHAP)
-- [ ] **Task 5.1: TreeSHAP Analysis on Best GBDT Model**
-  - Compute SHAP values for test samples using `shap.TreeExplainer`.
+- [ ] **Section 7: Interpretability & Feature Attribution (SHAP)**
+  - Run `shap.TreeExplainer` on the best gradient boosting model.
   - Generate:
-    - Global feature importance summary beeswarm plot.
+    - Global feature importance beeswarm plot.
     - SHAP dependence plots for `dist_to_nearest_fault_km` and top GMM posterior probability columns (`gmm_prob_*`).
-- [ ] **Task 5.2: Geological Impact Profiling Narrative**
-  - Interpret how fault proximity and hypocentral clustering influence transition thresholds between alert levels (`green` $\rightarrow$ `yellow` $\rightarrow$ `orange` $\rightarrow$ `red`).
+  - Summarize geological impact insights.
 
-### Phase 6: End-to-End Production Pipeline
-- [ ] **Task 6.1: Unified Predictor Class**
-  - Implement `EarthquakeImpactPipeline`:
-    $$\text{Raw Event JSON/Dict} \xrightarrow{\text{M1 Preprocessor}} \text{Base Features} \xrightarrow{\text{M2 Clusterers}} \text{Augmented Features} \xrightarrow{\text{M4 Final Model}} \text{Impact Prediction}$$
-- [ ] **Task 6.2: Serialization & Smoke Testing**
-  - Package all required transformer and model weights into `artifacts/`.
-  - Verify that a raw earthquake record produces a valid prediction and probability distribution in $< 50\text{ ms}$.
+- [ ] **Section 8: Interactive Inference & Production Pipeline**
+  - Implement `EarthquakeImpactPipeline` class:
+    $$\text{Raw Event Dict} \xrightarrow{\text{M1 Preprocessor}} \text{Base Features} \xrightarrow{\text{M2 Clusterers}} \text{Augmented Features} \xrightarrow{\text{M4 Model}} \text{Prediction}$$
+  - Add an interactive Jupyter widget (`ipywidgets`) allowing users to slide latitude, longitude, magnitude, and depth to visualize predicted PAGER alert level and probabilities live in the notebook.
+  - Export final pipeline artifact to `artifacts/end_to_end_pipeline.joblib`.
 
 ---
 
-## 4. Expected Deliverables
+## 5. Expected Deliverables
 
 ```
 module4/
-├── README.md                          # Module summary
-├── TODO.md                            # This specification file
+├── 04_advanced_models_and_integration.ipynb  # Primary self-contained Jupyter notebook
+├── TODO.md                                   # This specification file
 ├── artifacts/
-│   ├── best_lightgbm_aug.joblib       # Tuned LightGBM model
-│   ├── best_xgboost_aug.joblib        # Tuned XGBoost model
-│   ├── best_rf_aug.joblib             # Tuned Random Forest model
-│   ├── best_mlp_aug.pt                # PyTorch / Keras neural network weights
-│   ├── stacking_meta_learner.joblib   # Level-1 stacking model
-│   └── end_to_end_pipeline.joblib     # Full production pipeline artifact
-├── reports/
-│   ├── final_comparative_leaderboard.md # Master leaderboard (M3 + M4, Base vs Aug)
-│   ├── statistical_significance.md    # Hypothesis testing results & p-values
-│   ├── shap_explainability_report.md  # SHAP plots and feature impact analysis
-│   └── figures/                       # Beeswarm plots, dependence curves, ROC overlays
-├── src/
-│   ├── __init__.py
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── tree_ensembles.py          # Random Forest & Extra Trees
-│   │   ├── gradient_boosting.py       # LightGBM, XGBoost, CatBoost
-│   │   └── neural_network.py          # PyTorch Tabular ResNet / MLP
-│   ├── ensembling/
-│   │   ├── __init__.py
-│   │   ├── voting_classifier.py       # Weighted soft-voting integrator
-│   │   └── stacking_ensemble.py       # Level-1 stacking meta-learner
-│   ├── evaluation/
-│   │   ├── global_benchmarker.py      # Aggregates M3 + M4 metrics into master leaderboard
-│   │   └── hypothesis_testing.py      # Paired t-tests & Wilcoxon tests
-│   ├── explainability.py              # SHAP summary & dependence plotting
-│   └── inference_pipeline.py          # Unified end-to-end predictor
-└── tests/
-    ├── __init__.py
-    ├── test_advanced_models.py        # Unit tests for GBDT & MLP training
-    ├── test_stacking.py               # Stacking meta-learner tests
-    └── test_inference_pipeline.py     # End-to-end prediction from raw dict test
+│   ├── best_lightgbm_aug.joblib              # Tuned LightGBM model
+│   ├── best_xgboost_aug.joblib               # Tuned XGBoost model
+│   ├── best_rf_aug.joblib                    # Tuned Random Forest model
+│   ├── best_mlp_aug.pt                       # PyTorch neural network weights
+│   ├── stacking_meta_learner.joblib          # Level-1 stacking model
+│   └── end_to_end_pipeline.joblib            # Exported unified pipeline
+└── reports/
+    ├── final_comparative_leaderboard.md      # Master leaderboard table (M3 + M4)
+    ├── statistical_significance.md           # Hypothesis tests & p-values
+    ├── shap_explainability_report.md         # SHAP plots and feature impact analysis
+    └── figures/                              # Beeswarm plots, dependence curves, ROC overlays
 ```
 
 ---
 
-## 5. Module API & Interface Specification
+## 6. Notebook Inter-Module API & Inference Demo
 
-### 5.1 Python API
+### 6.1 End-to-End Pipeline Inference Class
 
-```python
-# module4/src/ensembling/stacking_ensemble.py
-from typing import List, Dict, Any, Optional
-import numpy as np
-import pandas as pd
-from sklearn.base import BaseEstimator, ClassifierMixin
-
-class StackingEnsemble(BaseEstimator, ClassifierMixin):
-    """
-    Two-tier Stacking Classifier that fits Level-1 meta-estimator
-    on out-of-fold predicted class probabilities of Level-0 models.
-    """
-    def __init__(self, base_models: List[Any], meta_learner: Any, use_features: bool = False):
-        self.base_models = base_models
-        self.meta_learner = meta_learner
-        self.use_features = use_features  # If True, concatenates raw features with predicted probabilities
-
-    def fit(self, X: np.ndarray, y: np.ndarray, cv: int = 5) -> "StackingEnsemble":
-        """Generates OOF probabilities for Level-0 models and fits meta-learner."""
-        ...
-
-    def predict(self, X: np.ndarray) -> np.ndarray:
-        """Returns predicted class labels."""
-        ...
-
-    def predict_proba(self, X: np.ndarray) -> np.ndarray:
-        """Returns calibrated class probabilities."""
-        ...
-```
+Teammates or evaluators can run end-to-end inference using the exported pipeline:
 
 ```python
-# module4/src/inference_pipeline.py
-from typing import Dict, Any, Union
+import joblib
 import pandas as pd
-import numpy as np
 
-class EarthquakeImpactPipeline:
-    """
-    Complete end-to-end inference engine:
-    Raw Earthquake Data -> Module 1 -> Module 2 -> Module 4 Ensemble -> Impact Prediction.
-    """
-    def __init__(
-        self,
-        m1_preprocessor_path: str,
-        m2_augmenter_path: str,
-        m4_model_path: str
-    ):
-        self.m1_preprocessor = None
-        self.m2_augmenter = None
-        self.m4_model = None
-        self._load_artifacts(m1_preprocessor_path, m2_augmenter_path, m4_model_path)
+# Load unified pipeline:
+pipeline = joblib.load("module4/artifacts/end_to_end_pipeline.joblib")
 
-    def _load_artifacts(self, m1_path: str, m2_path: str, m4_path: str) -> None:
-        ...
+# Sample raw earthquake query:
+sample_event = {
+    "latitude": 37.7749,
+    "longitude": -122.4194,
+    "depth": 12.3,
+    "mag": 6.4,
+    "magType": "mw",
+    "nst": 42.0,
+    "gap": 35.0,
+    "dmin": 0.15,
+    "rms": 0.22,
+    "horizontalError": 0.8,
+    "depthError": 1.2,
+    "magError": 0.05
+}
 
-    def predict_single(self, event: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Accepts raw earthquake dictionary:
-        {
-            "latitude": 37.7749,
-            "longitude": -122.4194,
-            "depth": 12.3,
-            "mag": 6.2,
-            "magType": "mw",
-            "nst": 45,
-            "gap": 32.0,
-            "dmin": 0.12,
-            "rms": 0.25,
-            ...
-        }
-        Returns:
-        {
-            "predicted_alert": "yellow",
-            "probabilities": {"green": 0.08, "yellow": 0.74, "orange": 0.15, "red": 0.03},
-            "nearest_fault_distance_km": 8.4,
-            "tectonic_cluster_id": 4,
-            "is_background_noise": False
-        }
-        """
-        ...
-
-    def predict_batch(self, df_raw: pd.DataFrame) -> pd.DataFrame:
-        """Runs end-to-end batch inference on raw DataFrame."""
-        ...
+result = pipeline.predict_single(sample_event)
+print("Predicted Alert:", result["predicted_alert"])
+print("Class Probabilities:", result["probabilities"])
+print("Nearest Fault Distance (km):", result["nearest_fault_distance_km"])
 ```
 
-```python
-# module4/src/explainability.py
-import shap
-import pandas as pd
-from typing import List
-
-class EarthquakeExplainer:
-    """
-    TreeSHAP and KernelSHAP attribution analyzer for earthquake impact predictions.
-    """
-    def __init__(self, model, feature_names: List[str]):
-        self.model = model
-        self.feature_names = feature_names
-        self.explainer = None
-
-    def fit_explainer(self, background_data: np.ndarray) -> None:
-        ...
-
-    def generate_summary_plot(self, X_sample: np.ndarray, output_path: str) -> None:
-        """Saves SHAP beeswarm plot ranking top sensor and fault features."""
-        ...
-
-    def generate_dependence_plot(self, X_sample: np.ndarray, feature_name: str, output_path: str) -> None:
-        """Plots non-linear relationship between fault distance / GMM probability and impact."""
-        ...
-```
-
-### 5.2 Global Leaderboard Schema Contract (`final_comparative_leaderboard.md`)
+### 6.2 Master Global Leaderboard Schema (`final_comparative_leaderboard.md`)
 
 | Model Family | Specific Model | Feature Set | Macro F1 | Weighted F1 | Multi-Class ROC-AUC | Log Loss | Latency (ms) |
 |---|---|---|---|---|---|---|---|
@@ -316,28 +243,9 @@ class EarthquakeExplainer:
 | Neural Network (M4)| Deep Tabular MLP | **Augmented** | - | - | - | - | - |
 | **Ensemble (M4)** | **Stacking Classifier** | **Augmented** | - | - | - | - | - |
 
-### 5.3 CLI Interface
-
-```bash
-# Run training, ensembling, global benchmarking, and SHAP explainability
-python -m module4.src.benchmark_runner \
-    --m1-dir ../module1/data/processed/ \
-    --m2-dir ../module2/data/augmented/ \
-    --m3-oof-dir ../module3/artifacts/oof_predictions/ \
-    --artifacts-dir artifacts/ \
-    --reports-dir reports/
-
-# Run inference on a test JSON payload
-python -m module4.src.inference_pipeline \
-    --pipeline-artifacts artifacts/end_to_end_pipeline.joblib \
-    --input sample_event.json
-```
-
 ---
 
-## 6. Validation & Quality Checks
-1. **Two-Stage Improvement Benchmark**: Verify whether the best Augmented model shows a statistically significant gain ($p < 0.05$) in Macro F1 over the best Base model.
-2. **Stacking Integrity**: Ensure Level-1 meta-learner is trained strictly on out-of-fold predictions to prevent severe meta-overfitting.
-3. **Inference Latency Sanity Check**: Single-event prediction latency must remain under $100\text{ ms}$ for real-time seismic alert utility.
-4. **SHAP Consistency Check**: Verify that `shap_values.sum(axis=-1) + base_value` reconstructs the model's raw margin output.
-
+## 7. Validation & Sanity Checklist
+1. **Statistical Significance Proof**: Verify that the paired $t$-test or Wilcoxon test achieves $p < 0.05$ between the best Augmented model and best Base model.
+2. **Inference Latency Benchmark**: Verify that `predict_single` runs in $< 100\text{ ms}$ for real-time alert readiness.
+3. **Reproducibility Test**: Execute **Kernel -> Restart Kernel and Run All Cells**; verify clean end-to-end execution.

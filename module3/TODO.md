@@ -1,16 +1,18 @@
 # Module 3: Supervised Learning & Predictive Modelling
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Tulip0648/seismic-fault-impact/blob/main/module3/03_supervised_predictive_modelling.ipynb)
+
 ## 1. Overview & Objectives
 Module 3 implements the **supervised predictive modeling and baseline benchmarking** tier of the project. Its goal is to predict earthquake impact severity—specifically the PAGER multi-class alert level (`alert`: green, yellow, orange, red) or continuous Modified Mercalli Intensity (`mmi`).
 
 This module explores four foundational machine learning paradigms:
 1. **Linear Models**: Logistic Regression with L1 (Lasso), L2 (Ridge), and ElasticNet regularization.
 2. **Probabilistic Models**: Gaussian Naive Bayes, Linear Discriminant Analysis (LDA), and Quadratic Discriminant Analysis (QDA).
-3. **Instance-Based Models**: k-Nearest Neighbors ($k$-NN) with tuned distance metrics.
+3. **Instance-Based Models**: $k$-Nearest Neighbors ($k$-NN) with tuned distance metrics.
 4. **Kernel-Based Models**: Support Vector Machines (SVM / SVC) with Radial Basis Function (RBF), Linear, and Polynomial kernels.
 
 ### The Two-Stage Evaluation Protocol:
-A core scientific objective of this project is to rigorously prove whether unsupervised tectonic discovery features (Module 2) improve downstream impact prediction over raw sensor features alone. Every candidate model family in Module 3 must be trained, tuned, and evaluated on **both** dataset variants:
+Every candidate model in Module 3 is trained, tuned, and evaluated on **both** dataset variants under the same stratified splits:
 - **Base (Baseline)**: Imputed and standardized raw sensor features + coordinates from Module 1.
 - **Augmented (Coupled)**: Base features + PCA components + DBSCAN fault distances + GMM EM posterior probabilities from Module 2.
 
@@ -20,264 +22,171 @@ A core scientific objective of this project is to rigorously prove whether unsup
 
 ### Overall Pipeline Position:
 ```
-     ┌───────────────────────┐              ┌───────────────────────┐
-     │       MODULE 1        │              │       MODULE 2        │
-     │ Base Train/Val/Test   │              │ Augmented Train/Val/  │
-     │ (Raw Scaled Features) │              │ Test (Fault Features) │
-     └───────────┬───────────┘              └───────────┬───────────┘
-                 │                                      │
-                 │ Base Splits                          │ Augmented Splits
-                 ▼                                      ▼
-     ┌──────────────────────────────────────────────────────────────┐
-     │                           MODULE 3                           │ <--- (YOU ARE HERE)
-     │ - Linear (Logistic Regression L1/L2)                         │
-     │ - Probabilistic (Naive Bayes, LDA, QDA)                      │
-     │ - Instance-based (k-NN)                                      │
-     │ - Kernel-based (SVM RBF / Poly)                              │
-     │                                                              │
-     │ Stage 1 (Base) vs Stage 2 (Augmented) Evaluation             │
-     └──────────────────────────────┬───────────────────────────────┘
-                                    │
-                                    │ Baseline Metrics Comparison
-                                    │ & Out-of-Fold (OOF) Probability Predictions
-                                    ▼
-     ┌──────────────────────────────────────────────────────────────┐
-     │                           MODULE 4                           │
-     │ Advanced Models, Global Leaderboard & Stacking Ensembles     │
-     └──────────────────────────────────────────────────────────────┘
+     ┌───────────────────────────────────┐  ┌───────────────────────────────────┐
+     │             MODULE 1              │  │             MODULE 2              │
+     │ 01_geospatial_preprocessing.ipynb │  │ 02_unsupervised_fault_            │
+     │ (Base Train/Val/Test Splits)      │  │    discovery.ipynb (Augmented)    │
+     └─────────────────┬─────────────────┘  └─────────────────┬─────────────────┘
+                       │                                      │
+                       │ Base Splits                          │ Augmented Splits
+                       ▼                                      ▼
+     ┌──────────────────────────────────────────────────────────────────────────┐
+     │                                 MODULE 3                                 │ <--- (YOU ARE HERE)
+     │ 03_supervised_predictive_modelling.ipynb                                 │
+     │ - Linear (Logistic Regression L1/L2)                                     │
+     │ - Probabilistic (Naive Bayes, LDA, QDA)                                  │
+     │ - Instance-based (k-NN)                                                  │
+     │ - Kernel-based (SVM RBF / Poly)                                          │
+     │                                                                          │
+     │ Stage 1 (Base) vs Stage 2 (Augmented) Evaluation Table                   │
+     └─────────────────────────────────────┬────────────────────────────────────┘
+                                           │
+                                           │ Baseline Metrics Comparison
+                                           │ & Out-of-Fold (OOF) Prediction Parquets
+                                           ▼
+     ┌──────────────────────────────────────────────────────────────────────────┐
+     │                                 MODULE 4                                 │
+     │ 04_advanced_models_and_integration.ipynb                                 │
+     │ Advanced Models, Global Leaderboard & Stacking Ensembles                 │
+     └──────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Upstream Dependencies:
-1. **Module 1**:
-   - `module1/data/processed/train_base.parquet`
-   - `module1/data/processed/val_base.parquet`
-   - `module1/data/processed/test_base.parquet`
-2. **Module 2**:
-   - `module2/data/augmented/train_augmented.parquet`
-   - `module2/data/augmented/val_augmented.parquet`
-   - `module2/data/augmented/test_augmented.parquet`
+1. **Module 1**: `data/processed/train_base.parquet`, `test_base.parquet`
+2. **Module 2**: `data/augmented/train_augmented.parquet`, `test_augmented.parquet`
 
 ### Downstream Consumers:
-- **Module 4 (Advanced Models & Stacking)**:
-  - Consumes Module 3's benchmark scores as standard baseline comparison points.
-  - Consumes cross-validated **Out-of-Fold (OOF)** prediction probabilities generated by Module 3's best models to feed as Level-0 inputs into Module 4's Stacking Meta-Learner.
+- **Module 4 Notebook (`04_advanced_models_and_integration.ipynb`)**:
+  - Consumes Module 3's baseline benchmark metrics as comparative baselines.
+  - Consumes cross-validated **Out-of-Fold (OOF)** prediction probabilities generated by Module 3's models to feed as Level-0 inputs into Module 4's Stacking Meta-Learner.
 
 ---
 
-## 3. Tasks & Implementation Checklist
+## 3. Environment Setup & Notebook Execution (Colab & Local)
 
-### Phase 1: Problem Framing, Data Ingestion & Imbalance Handling
-- [ ] **Task 1.1: Dataset Loaders**
-  - Implement unified data loaders reading both Base and Augmented Parquet partitions.
-  - Verify identical split indices across Base and Augmented splits.
-- [ ] **Task 1.2: Target Encoding & Imbalance Mitigation**
-  - Encode target variable `alert` (`green`: 0, `yellow`: 1, `orange`: 2, `red`: 3).
-  - High-impact earthquakes (orange/red) are rare. Implement:
-    - Balanced class weights (`class_weight='balanced'`).
-    - Optional oversampling (SMOTE / BorderlineSMOTE) applied strictly inside CV training folds only.
+### 3.1 Running in Google Colab
+Open directly using the Colab badge or via `File -> Open notebook -> GitHub` selecting `Tulip0648/seismic-fault-impact` and choosing `module3/03_supervised_predictive_modelling.ipynb`.
 
-### Phase 2: Candidate Model Development & Hyperparameter Tuning
-All models must implement a standardized interface (`fit`, `predict`, `predict_proba`).
+Paste this initialization cell at the top of the notebook:
 
-- [ ] **Task 2.1: Linear Models**
-  - Implement multinomial Logistic Regression with:
-    - L1 regularization (feature selection / sparsity).
-    - L2 regularization (weight shrinkage).
-    - ElasticNet (balancing L1 and L2).
-  - Tune regularization strength $C \in [10^{-3}, 10^3]$ using Stratified 5-Fold Cross-Validation.
-- [ ] **Task 2.2: Probabilistic Models**
-  - Implement Gaussian Naive Bayes (`GaussianNB`) with variance smoothing tuning.
-  - Implement Linear Discriminant Analysis (`LDA`) with shrinkage tuning (`shrinkage='auto'`).
-  - Implement Quadratic Discriminant Analysis (`QDA`) with regularizer parameter tuning (`reg_param`).
-- [ ] **Task 2.3: Instance-Based Models ($k$-NN)**
-  - Implement $k$-Nearest Neighbors Classifier (`KNeighborsClassifier`).
-  - Sweep neighbors $k \in [3, 5, 7, 11, 15, 25]$.
-  - Compare weights: `'uniform'` vs `'distance'`.
-  - Compare distance metrics: `'euclidean'`, `'manhattan'`, and custom spatial-weighted distance.
-- [ ] **Task 2.4: Kernel-Based Models (SVM / SVC)**
-  - Implement Support Vector Classifier (`SVC`) with `probability=True` (Platt scaling).
-  - Evaluate kernels:
-    - RBF kernel: Tune $C$ and $\gamma \in [10^{-4}, 10^1]$.
-    - Linear kernel: Fast baseline for high-dimensional feature spaces.
-    - Polynomial kernel: Degree 2 and 3.
+```python
+# Cell 1: Colab / Local Environment Setup
+import os, sys
 
-### Phase 3: Two-Stage Evaluation Protocol Execution
-- [ ] **Task 3.1: Stage 1 (Base Dataset Benchmarking)**
-  - Train and evaluate each tuned model on `train_base.parquet` and `test_base.parquet`.
-  - Record:
-    - Macro F1-Score
-    - Weighted F1-Score
-    - Multi-class ROC-AUC (One-vs-Rest / macro-averaged)
-    - Confusion Matrix & Classification Report
-- [ ] **Task 3.2: Stage 2 (Augmented Dataset Benchmarking)**
-  - Train and evaluate each tuned model on `train_augmented.parquet` and `test_augmented.parquet`.
-  - Record identical metrics.
-- [ ] **Task 3.3: Comparative Delta Analysis**
-  - Compute performance gain:
-    $$\Delta \text{Metric} = \text{Metric}_{\text{Augmented}} - \text{Metric}_{\text{Base}}$$
-  - Determine which model families benefit the most from tectonic fault distance and GMM posterior features.
+IN_COLAB = 'google.colab' in sys.modules
 
-### Phase 4: Out-of-Fold (OOF) Prediction Generation for Module 4
-- [ ] **Task 4.1: Cross-Validated OOF Prediction Pipeline**
-  - For the top-performing model of each family on the Augmented dataset (e.g., Logistic L2, LDA, k-NN, SVC RBF):
-    - Run 5-fold Stratified K-Fold CV on `train_augmented`.
-    - Collect out-of-fold predicted probability vectors $\hat{\mathbf{p}}_i \in [0, 1]^C$ for every training sample.
-    - Fit on full training set and generate predictions on `test_augmented`.
+if IN_COLAB:
+    print("Running in Google Colab. Setting up workspace...")
+    from google.colab import drive
+    drive.mount('/content/drive')
+    
+    REPO_NAME = "seismic-fault-impact"
+    REPO_PATH = f"/content/{REPO_NAME}"
+    if not os.path.exists(REPO_PATH):
+        !git clone https://github.com/Tulip0648/seismic-fault-impact.git {REPO_PATH}
+    
+    %cd {REPO_PATH}/module3
+    !pip install -r ../requirements.txt -q
+    DATA_BASE_DIR = "../data/processed"
+    DATA_AUG_DIR = "../data/augmented"
+    ARTIFACTS_DIR = "./artifacts"
+else:
+    print("Running locally.")
+    DATA_BASE_DIR = "../module1/data/processed"
+    DATA_AUG_DIR = "../module2/data/augmented"
+    ARTIFACTS_DIR = "./artifacts"
+
+os.makedirs(f"{ARTIFACTS_DIR}/models", exist_ok=True)
+os.makedirs(f"{ARTIFACTS_DIR}/oof_predictions", exist_ok=True)
+print("Environment ready.")
+```
+
+### 3.2 Running in Local Jupyter
+```bash
+cd seismic-fault-impact/module3
+jupyter lab
+```
+
+---
+
+## 4. Notebook Structure & Implementation Tasks
+
+The notebook `03_supervised_predictive_modelling.ipynb` should be organized into the following sequential sections:
+
+- [ ] **Section 1: Data Loading & Preprocessing**
+  - Load `train_base.parquet`, `test_base.parquet`, `train_augmented.parquet`, and `test_augmented.parquet`.
+  - Verify that index and event IDs align identically between Base and Augmented splits.
+  - Encode target labels (`green`: 0, `yellow`: 1, `orange`: 2, `red`: 3).
+  - Compute class weights (`class_weight='balanced'`) to handle extreme rarity of red/orange events.
+
+- [ ] **Section 2: Stage 1 Benchmarking (Base Features)**
+  - Train and evaluate using Stratified 5-Fold Cross-Validation on the Base dataset:
+    - Logistic Regression with L1 and L2 penalties.
+    - Gaussian Naive Bayes, LDA, and QDA.
+    - $k$-NN Classifier ($k \in [3, 7, 15]$).
+    - Support Vector Classifier (Linear and RBF kernels).
+  - Log: Macro F1, Weighted F1, Multi-class ROC-AUC (One-vs-Rest), and Confusion Matrices.
+
+- [ ] **Section 3: Stage 2 Benchmarking (Augmented Features)**
+  - Train and evaluate the exact same models using identical folds on the Augmented dataset (Base + PCA + DBSCAN + GMM).
+  - Log identical metrics.
+
+- [ ] **Section 4: Two-Stage Comparative Analysis**
+  - Compute performance gains:
+    $$\Delta \text{Macro F1} = \text{Macro F1}_{\text{Augmented}} - \text{Macro F1}_{\text{Base}}$$
+    $$\Delta \text{ROC-AUC} = \text{ROC-AUC}_{\text{Augmented}} - \text{ROC-AUC}_{\text{Base}}$$
+  - Display comparative pandas DataFrame table and plot bar chart of metric deltas.
+
+- [ ] **Section 5: Out-of-Fold (OOF) Prediction Generation for Module 4**
+  - For the best model of each family on the Augmented dataset:
+    - Generate 5-fold cross-validated out-of-fold probability vectors $\hat{\mathbf{p}}_i \in [0, 1]^C$ for the training set.
+    - Generate test set predicted probabilities.
   - Export:
     - `artifacts/oof_predictions/oof_train_m3.parquet`
     - `artifacts/oof_predictions/oof_test_m3.parquet`
 
-### Phase 5: Interpretability & Feature Significance
-- [ ] **Task 5.1: Linear Model Coefficients**
-  - Inspect standardized coefficients of Logistic Regression on the Augmented dataset.
-  - Assess whether `dist_to_nearest_fault_km` and `gmm_prob_*` have statistically significant non-zero weights.
-- [ ] **Task 5.2: Permutation Feature Importance**
-  - Compute permutation importance on test set for Kernel SVM and $k$-NN.
-  - Generate top-15 feature ranking plots.
+- [ ] **Section 6: Interpretability & Feature Significance**
+  - Inspect Logistic Regression coefficients on the Augmented dataset.
+  - Assess whether `dist_to_nearest_fault_km` and `gmm_prob_*` have statistically significant predictive weight.
+  - Plot top feature weights and permutation importance rankings.
 
 ---
 
-## 4. Expected Deliverables
+## 5. Expected Deliverables
 
 ```
 module3/
-├── README.md                          # Module summary
-├── TODO.md                            # This specification file
+├── 03_supervised_predictive_modelling.ipynb  # Primary self-contained Jupyter notebook
+├── TODO.md                                   # This specification file
 ├── artifacts/
-│   ├── models/                        # Serialized best models (.joblib)
-│   │   ├── logistic_regression_base.joblib
+│   ├── models/                               # Serialized best models (.joblib)
 │   │   ├── logistic_regression_aug.joblib
-│   │   ├── svm_rbf_base.joblib
 │   │   ├── svm_rbf_aug.joblib
 │   │   ├── knn_aug.joblib
 │   │   └── lda_aug.joblib
-│   └── oof_predictions/               # Out-of-Fold probability matrices for Module 4
+│   └── oof_predictions/                      # Out-of-Fold predictions for Module 4
 │       ├── oof_train_m3.parquet
 │       └── oof_test_m3.parquet
-├── reports/
-│   ├── baseline_benchmarks.md         # Full Two-Stage comparative results table
-│   └── figures/                       # ROC-AUC curves, confusion matrices, feature coefficients
-├── src/
-│   ├── __init__.py
-│   ├── data_loader.py                 # Loads Base & Augmented splits, handles class weighting
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── base_classifier.py         # Abstract base wrapper class
-│   │   ├── linear_models.py           # Logistic Regression (L1, L2, ElasticNet)
-│   │   ├── probabilistic_models.py    # Naive Bayes, LDA, QDA
-│   │   ├── knn_models.py              # k-NN classifier & distance metrics
-│   │   └── svm_models.py              # Support Vector Classifiers (RBF, Poly, Linear)
-│   ├── evaluation.py                  # Macro/Weighted F1, ROC-AUC, confusion matrix
-│   ├── two_stage_runner.py            # Executes Two-Stage Evaluation Protocol
-│   └── oof_generator.py               # Generates out-of-fold predictions for Module 4
-└── tests/
-    ├── __init__.py
-    ├── test_data_loader.py            # Verifies dataset loading and alignment
-    ├── test_models.py                 # Smoke tests for fit/predict across all models
-    └── test_two_stage_runner.py       # Integration test verifying metric logging
+└── reports/
+    ├── baseline_benchmarks.md                # Markdown table of Stage 1 vs 2 results
+    └── figures/                              # ROC curves, confusion matrices, coefficient plots
 ```
 
 ---
 
-## 5. Module API & Interface Specification
+## 6. Notebook Inter-Module API & Data Contract
 
-### 5.1 Python API
+### 6.1 Out-of-Fold Prediction Schema (`oof_train_m3.parquet`, `oof_test_m3.parquet`)
 
-```python
-# module3/src/models/base_classifier.py
-from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
-import numpy as np
-
-class BaseImpactClassifier(ABC):
-    """
-    Standardized interface for all Module 3 supervised models.
-    """
-    @abstractmethod
-    def fit(self, X: np.ndarray, y: np.ndarray, **kwargs) -> "BaseImpactClassifier":
-        """Fits model on training features and integer/encoded labels."""
-        pass
-
-    @abstractmethod
-    def predict(self, X: np.ndarray) -> np.ndarray:
-        """Returns 1D array of predicted class labels."""
-        pass
-
-    @abstractmethod
-    def predict_proba(self, X: np.ndarray) -> np.ndarray:
-        """Returns 2D array of predicted class probabilities of shape (N, C)."""
-        pass
-
-    def evaluate(self, X: np.ndarray, y: np.ndarray) -> Dict[str, float]:
-        """
-        Computes Macro F1, Weighted F1, Multi-class ROC-AUC, and Log Loss.
-        """
-        ...
-```
+Module 4 loads this artifact directly to train its Stacking Meta-Learner:
 
 ```python
-# module3/src/two_stage_runner.py
-from typing import Dict, List, Tuple
 import pandas as pd
-from module3.src.models.base_classifier import BaseImpactClassifier
 
-class TwoStageEvaluator:
-    """
-    Orchestrates the Two-Stage Evaluation Protocol (Base vs Augmented)
-    across candidate model families.
-    """
-    def __init__(self, target_col: str = "alert", random_state: int = 42):
-        self.target_col = target_col
-        self.random_state = random_state
-
-    def run_stage_comparison(
-        self,
-        model_name: str,
-        model_cls: type,
-        model_params: Dict[str, Any],
-        df_base_train: pd.DataFrame,
-        df_base_test: pd.DataFrame,
-        df_aug_train: pd.DataFrame,
-        df_aug_test: pd.DataFrame,
-    ) -> Dict[str, Any]:
-        """
-        Trains model_cls on:
-          1. df_base_train -> evaluates on df_base_test
-          2. df_aug_train  -> evaluates on df_aug_test
-        Returns a dictionary containing metrics for both stages and the delta.
-        """
-        ...
-
-    def generate_leaderboard(self, results: List[Dict[str, Any]]) -> pd.DataFrame:
-        """Constructs a formatted comparative Markdown/DataFrame table."""
-        ...
+# In Module 4:
+df_oof_m3 = pd.read_parquet("module3/artifacts/oof_predictions/oof_train_m3.parquet")
+print(df_oof_m3.columns.tolist())
 ```
-
-```python
-# module3/src/oof_generator.py
-import numpy as np
-import pandas as pd
-from typing import Dict, List
-
-def generate_oof_predictions(
-    model,
-    X_train: np.ndarray,
-    y_train: np.ndarray,
-    X_test: np.ndarray,
-    n_splits: int = 5,
-    random_state: int = 42
-) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Runs Stratified K-Fold CV to compute Out-of-Fold predicted probabilities for training set,
-    and average predicted probabilities for test set.
-    Returns: (oof_train_probs, test_probs) of shape (N, num_classes).
-    """
-    ...
-```
-
-### 5.2 Out-of-Fold Prediction Schema (`oof_train_m3.parquet`, `oof_test_m3.parquet`)
-
-This contract defines the data passed to Module 4 for stacking:
 
 | Column Name | Type | Description |
 |---|---|---|
@@ -288,26 +197,9 @@ This contract defines the data passed to Module 4 for stacking:
 | `lda_prob_<class>` | `float64` | Predicted class probabilities from tuned LDA |
 | `true_label` | `int32` | Ground truth target class index |
 
-### 5.3 CLI Interface
-
-```bash
-# Execute full Two-Stage Evaluation across all linear, probabilistic, KNN, and SVM models
-python -m module3.src.two_stage_runner \
-    --base-dir ../module1/data/processed/ \
-    --aug-dir ../module2/data/augmented/ \
-    --artifacts-dir artifacts/ \
-    --reports-dir reports/ \
-    --target alert \
-    --cv-folds 5
-```
-
 ---
 
-## 6. Validation & Quality Checks
-1. **Strict Evaluation Metric Tracking**:
-   - Ensure `Macro F1-Score` is calculated using `average='macro'` to avoid majority-class illusion.
-   - Calculate multi-class `ROC-AUC` using `multi_class='ovr'` and `average='macro'`.
-2. **Two-Stage Consistency**: Verify that the exact same test event IDs are evaluated in Stage 1 and Stage 2.
-3. **Probability Calibration**: Ensure `predict_proba` outputs valid distributions summing to $1.0$ across all classes.
-4. **Reproducibility**: Set `random_state=42` across all cross-validation folds and stochastic solvers.
-
+## 7. Validation & Sanity Checklist
+1. **Macro Averaging**: Verify that `f1_score(..., average='macro')` and `roc_auc_score(..., multi_class='ovr')` are used so minority alert classes (orange/red) are not overshadowed by majority classes.
+2. **Probability Check**: Ensure all `predict_proba` outputs sum to $1.0$ across rows.
+3. **Reproducibility Test**: Execute **Kernel -> Restart Kernel and Run All Cells**; verify clean end-to-end execution.
