@@ -119,18 +119,18 @@ print(f"Workspace ready. Data directory: {DATA_DIR}")
 
 The notebook `01_geospatial_preprocessing.ipynb` should be organized into the following sequential cells:
 
-- [ ] **Section 1: Data Ingestion & Schema Audit**
+- [x] **Section 1: Data Ingestion & Schema Audit**
   - Fetch/load raw USGS ComCat records with ShakeMap and PAGER attributes.
   - Assert valid physical ranges: $\text{latitude} \in [-90, 90]$, $\text{longitude} \in [-180, 180]$, $\text{depth} \ge 0$, $\text{magnitude} > 0$.
   - Clean corrupted or synthetic test events.
   - Standardize target column `alert` (`green`, `yellow`, `orange`, `red`) and continuous `mmi`.
 
-- [ ] **Section 2: Missing Value Profiling & Imputation**
+- [x] **Section 2: Missing Value Profiling & Imputation**
   - Plot missing value bar chart / matrix for `nst`, `gap`, `dmin`, `rms`, `horizontalError`, `depthError`, `magError`.
   - Fit `SimpleImputer(strategy='median')` or `IterativeImputer` **exclusively on the training split** to strictly prevent data leakage.
   - Include missingness indicator columns (`MissingIndicator`).
 
-- [ ] **Section 3: Geospatial Coordinate Transformations**
+- [x] **Section 3: Geospatial Coordinate Transformations**
   - Convert angles from degrees to radians:
     $$\phi = \text{lat} \times \frac{\pi}{180}, \quad \lambda = \text{lon} \times \frac{\pi}{180}$$
   - Calculate 3D Earth-Centered Earth-Fixed (ECEF) Cartesian coordinates:
@@ -140,21 +140,21 @@ The notebook `01_geospatial_preprocessing.ipynb` should be organized into the fo
     where $R = 6371.0 \text{ km}$.
   - Generate an interactive 3D scatter plot of hypocenters inside the Earth using Plotly or Matplotlib.
 
-- [ ] **Section 4: Categorical Encoding & Sensor Feature Scaling**
+- [x] **Section 4: Categorical Encoding & Sensor Feature Scaling**
   - One-hot encode `magType` (`OneHotEncoder(handle_unknown='ignore')`).
   - Apply `RobustScaler` to skewed sensor and error metrics (`gap`, `dmin`, `rms`, `horizontalError`, `depthError`, `magError`).
 
-- [ ] **Section 5: Dimensionality Reduction (Sensor PCA)**
+- [x] **Section 5: Dimensionality Reduction (Sensor PCA)**
   - Fit `PCA` on scaled sensor and error features.
   - Plot the cumulative explained variance ratio curve.
   - Select components explaining $\ge 85\%$ variance (typically 2 to 4 components) and append as `pca_sensor_1`, `pca_sensor_2`, etc.
 
-- [ ] **Section 6: Stratified Train / Val / Test Partitioning**
+- [x] **Section 6: Stratified Train / Val / Test Partitioning**
   - Perform stratified split (70% train, 15% validation, 15% test) stratified on target variable `alert`.
   - Fix random seed (`random_state=42`).
   - Verify identical class proportions across train, val, and test partitions.
 
-- [ ] **Section 7: Artifact Serialization & Handoff**
+- [x] **Section 7: Artifact Serialization & Handoff**
   - Export data partitions as high-performance Parquet files:
     - `data/processed/train_base.parquet`
     - `data/processed/val_base.parquet`
