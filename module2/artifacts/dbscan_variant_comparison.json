@@ -1,0 +1,24 @@
+{
+  "selected": "ecef",
+  "min_samples": 10,
+  "variants": {
+    "ecef": {
+      "n_clusters": 19,
+      "noise_ratio": 0.06988727858293076,
+      "silhouette": 0.10812446556784402,
+      "davies_bouldin": 0.6491556936637964,
+      "eps_km": 573.3086273008672,
+      "eps_status": "knee",
+      "in_noise_band": true
+    },
+    "haversine": {
+      "n_clusters": 19,
+      "noise_ratio": 0.06956521739130435,
+      "silhouette": 0.10586943429799849,
+      "davies_bouldin": 0.6508403299065434,
+      "eps_km": 574.1568187077015,
+      "eps_status": "knee",
+      "in_noise_band": true
+    }
+  }
+}

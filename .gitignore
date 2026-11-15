@@ -218,3 +218,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Module 2 mock-mode outputs (fake data, only produced if Module 1 Base files are missing)
+data/augmented/mock/
+module2/artifacts/mock/
+module2/reports/mock/
