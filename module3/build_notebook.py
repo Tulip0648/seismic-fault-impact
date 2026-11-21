@@ -52,7 +52,7 @@ add_md("""# Module 3: Supervised Learning & Baseline Benchmarking
 2. **Team Roles**:
    - **Person 1**: Linear & Regularized Models (Logistic Regression with L1/L2/ElasticNet, Ridge/Lasso for MMI).
    - **Person 2**: Probabilistic & Discriminant Models (Gaussian Naive Bayes, LDA with shrinkage, QDA).
-   - **Person 3 (You)**: Distance-Based & Margin Models ($k$-Nearest Neighbors, Support Vector Classifiers with probability calibration).
+   - **Person 3 (Aaryan)**: Distance-Based & Margin Models ($k$-Nearest Neighbors, Support Vector Classifiers with probability calibration).
 3. **Module 4 Handoff**: Generate cross-validated Out-of-Fold (OOF) prediction probabilities for the stacking meta-learner.""")
 
 # Cell 1: Environment Setup
@@ -197,11 +197,11 @@ add_md("""---
 add_code("""# --- Person 2: Implement Naive Bayes, LDA, and QDA here ---
 """)
 
-# Person 3 Section (The User's Section)
+# Person 3 Section (Aaryan)
 add_md("""---
-## 6. Person 3 (Your Section): Distance-Based & Margin Models
+## 6. Person 3 (Aaryan): Distance-Based & Margin Models
 
-**Owner**: Person 3 (You)  
+**Owner**: Person 3 (Aaryan)  
 **Algorithms**:
 1. **k-Nearest Neighbors (k-NN)**: Distance-based classification.
 2. **Support Vector Classifier (SVC)**: Maximum margin classification with kernel transformations and probability calibration.

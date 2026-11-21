@@ -31,7 +31,7 @@ Every candidate model in Module 3 is trained, tuned, and evaluated on **both** d
                        │ Base Splits                          │ Augmented Splits
                        ▼                                      ▼
      ┌──────────────────────────────────────────────────────────────────────────┐
-     │                                 MODULE 3                                 │ <--- (YOU ARE HERE)
+     │                                 MODULE 3                                 │ <--- (CURRENT MODULE)
      │ 03_supervised_predictive_modelling.ipynb                                 │
      │ - Linear (Logistic Regression L1/L2)                                     │
      │ - Probabilistic (Naive Bayes, LDA, QDA)                                  │

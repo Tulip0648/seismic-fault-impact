@@ -49,7 +49,7 @@ Target metrics for all models: Macro F1-score, Weighted F1-score, Multi-class RO
 
 ---
 
-### Person 3 (Your Role): Support Vector Classifiers (SVC) & k-Nearest Neighbors (k-NN)
+### Person 3 (Aaryan): Support Vector Classifiers (SVC) & k-Nearest Neighbors (k-NN)
 **Goal**: Build, tune, and evaluate distance-based and boundary-margin models.
 
 - **Tasks**:
