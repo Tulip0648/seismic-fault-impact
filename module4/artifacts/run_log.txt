@@ -1,0 +1,55 @@
+[13:22:48] Logistic Regression        [Base     ]  CV macro-F1 0.466 ± 0.054 | test macro-F1 0.532  AUC 0.954  logloss 0.254  (4s)
+[13:22:48]    -> re-run config [Base]: Logistic Regression (L2, C=10.0)
+[13:23:00] Logistic Regression        [Augmented]  CV macro-F1 0.448 ± 0.062 | test macro-F1 0.460  AUC 0.941  logloss 0.288  (9s)
+[13:23:00]    -> re-run config [Augmented]: Logistic Regression (L2, C=10.0)
+[13:23:00] LDA                        [Base     ]  CV macro-F1 0.471 ± 0.042 | test macro-F1 0.515  AUC 0.949  logloss 0.592  (0s)
+[13:23:00]    -> re-run config [Base]: LDA (lsqr, shrinkage=auto)
+[13:23:01] LDA                        [Augmented]  CV macro-F1 0.459 ± 0.030 | test macro-F1 0.472  AUC 0.949  logloss 0.630  (0s)
+[13:23:01]    -> re-run config [Augmented]: LDA (lsqr, shrinkage=auto)
+[13:23:02] k-NN                       [Base     ]  CV macro-F1 0.492 ± 0.052 | test macro-F1 0.482  AUC 0.850  logloss 0.984  (0s)
+[13:23:02]    -> re-run config [Base]: k-NN (k=3, distance)
+[13:23:02] k-NN                       [Augmented]  CV macro-F1 0.475 ± 0.028 | test macro-F1 0.445  AUC 0.819  logloss 1.086  (0s)
+[13:23:02]    -> re-run config [Augmented]: k-NN (k=3, uniform)
+[13:23:12] SVC                        [Base     ]  CV macro-F1 0.437 ± 0.020 | test macro-F1 0.467  AUC 0.945  logloss 0.157  (8s)
+[13:23:12]    -> re-run config [Base]: SVC (poly deg=2, C=1.0)
+[13:23:18] SVC                        [Augmented]  CV macro-F1 0.438 ± 0.024 | test macro-F1 0.460  AUC 0.941  logloss 0.170  (3s)
+[13:23:18]    -> re-run config [Augmented]: SVC (poly deg=2, C=10.0)
+[13:23:18] Module 3 delivered outputs loaded and audited (4 models)
+[13:23:34] tuned Random Forest  [Base] in 16s
+[13:23:58] tuned Random Forest  [Augmented] in 24s
+[13:24:06] tuned Extra Trees    [Base] in 8s
+[13:24:16] tuned Extra Trees    [Augmented] in 10s
+[13:24:24] tuned LightGBM       [Base] in 8s
+[13:24:37] tuned LightGBM       [Augmented] in 13s
+[13:24:48] tuned XGBoost        [Base] in 11s
+[13:25:17] tuned XGBoost        [Augmented] in 29s
+[13:26:40] tuned CatBoost       [Base] in 83s
+[13:39:30] tuned CatBoost       [Augmented] in 770s
+[13:39:48] MLP [Base]: using loss=weighted_ce
+[13:40:02] MLP [Augmented]: using loss=focal
+[13:40:15] Random Forest              [Base     ]  CV macro-F1 0.572 ± 0.053 | test macro-F1 0.536  AUC 0.957  logloss 0.173  (13s)
+[13:40:27] Random Forest              [Augmented]  CV macro-F1 0.539 ± 0.065 | test macro-F1 0.553  AUC 0.954  logloss 0.183  (12s)
+[13:40:34] Extra Trees                [Base     ]  CV macro-F1 0.532 ± 0.038 | test macro-F1 0.444  AUC 0.948  logloss 0.252  (7s)
+[13:40:41] Extra Trees                [Augmented]  CV macro-F1 0.526 ± 0.059 | test macro-F1 0.530  AUC 0.953  logloss 0.168  (7s)
+[13:40:50] LightGBM                   [Base     ]  CV macro-F1 0.540 ± 0.075 | test macro-F1 0.569  AUC 0.953  logloss 0.167  (9s)
+[13:40:54] LightGBM                   [Augmented]  CV macro-F1 0.541 ± 0.043 | test macro-F1 0.576  AUC 0.955  logloss 0.166  (4s)
+[13:41:01] XGBoost                    [Base     ]  CV macro-F1 0.530 ± 0.071 | test macro-F1 0.580  AUC 0.953  logloss 0.226  (7s)
+[13:41:10] XGBoost                    [Augmented]  CV macro-F1 0.481 ± 0.064 | test macro-F1 0.520  AUC 0.954  logloss 0.224  (9s)
+[13:41:28] CatBoost                   [Base     ]  CV macro-F1 0.556 ± 0.085 | test macro-F1 0.561  AUC 0.960  logloss 0.168  (18s)
+[13:42:45] CatBoost                   [Augmented]  CV macro-F1 0.510 ± 0.052 | test macro-F1 0.602  AUC 0.957  logloss 0.161  (77s)
+[13:43:19] Deep Tabular MLP           [Base     ]  CV macro-F1 0.418 ± 0.046 | test macro-F1 0.467  AUC 0.926  logloss 0.448  (34s)
+[13:43:54] Deep Tabular MLP           [Augmented]  CV macro-F1 0.403 ± 0.069 | test macro-F1 0.458  AUC 0.943  logloss 0.486  (35s)
+[13:44:15] 5x2 done: Logistic Regression        Δ=+0.0042  p=0.1739  (11s elapsed)
+[13:44:15] 5x2 done: LDA                        Δ=+0.0118  p=0.7241  (12s elapsed)
+[13:44:16] 5x2 done: k-NN                       Δ=-0.0110  p=0.4959  (12s elapsed)
+[13:44:21] 5x2 done: SVC                        Δ=+0.0137  p=0.6592  (17s elapsed)
+[13:44:56] 5x2 done: Random Forest              Δ=+0.0010  p=0.5709  (53s elapsed)
+[13:45:16] 5x2 done: Extra Trees                Δ=+0.0247  p=0.1115  (72s elapsed)
+[13:45:34] 5x2 done: LightGBM                   Δ=-0.0350  p=0.1887  (91s elapsed)
+[13:46:00] 5x2 done: XGBoost                    Δ=-0.0306  p=0.7038  (116s elapsed)
+[13:47:52] 5x2 done: CatBoost                   Δ=-0.0032  p=0.0913  (228s elapsed)
+[13:49:02] 5x2 done: Deep Tabular MLP           Δ=-0.0380  p=0.4148  (298s elapsed)
+[13:49:02] 5x2 CV finished in 298s
+[13:49:10] Wrote shap_explainability_report.md
+[13:49:13] Deployed model: Random Forest (Base) | CV macro-F1 0.5725 | end-to-end p95 68.7 ms (target 80 ms)
+[13:49:25] Exported ./artifacts\end_to_end_pipeline.joblib (4.0 MB) and verified reload.
