@@ -29,36 +29,34 @@ def query_url(url, retries=3, delay=2):
             time.sleep(delay)
     return None
 
-def fetch_high_impact_geojson():
-    """Fetch all available historical red, orange, yellow alert earthquakes (2000-2024)."""
-    records = []
+def fetch_high_impact_events():
+    """Fetch all available historical red, orange, yellow alert earthquakes (2000-2024).
+
+    Sensor columns come from the CSV endpoint, exactly like fetch_period_data() does for
+    ordinary events. (An earlier version read them from GeoJSON, which has no
+    horizontalError / depthError / magError. Those columns were then missing for almost
+    every non-green event and never for green ones, so missingness leaked the label.)
+    GeoJSON is still queried, only for mmi.
+    """
+    chunks = []
     for alert in ["red", "orange", "yellow"]:
         print(f"Querying PAGER alert level '{alert}' (2000-2024)...")
-        url = f"{BASE_URL}?format=geojson&starttime=2000-01-01&endtime=2024-01-01&alertlevel={alert}"
-        raw = query_url(url)
-        if raw:
-            data = json.loads(raw.decode())
-            print(f"  Found {len(data['features'])} events with alert '{alert}'")
-            for f in data["features"]:
-                p = f["properties"]
-                g = f["geometry"]["coordinates"]
-                records.append({
-                    "id": f["id"],
-                    "time": p.get("time"),
-                    "latitude": g[1],
-                    "longitude": g[0],
-                    "depth": g[2],
-                    "mag": p.get("mag"),
-                    "magType": p.get("magType"),
-                    "nst": p.get("nst"),
-                    "gap": p.get("gap"),
-                    "dmin": p.get("dmin"),
-                    "rms": p.get("rms"),
-                    "mmi": p.get("mmi"),
-                    "alert": alert,
-                    "place": p.get("place")
-                })
-    return pd.DataFrame(records)
+        query = f"starttime=2000-01-01&endtime=2024-01-01&alertlevel={alert}"
+
+        mmi_by_id = {}
+        raw_geo = query_url(f"{BASE_URL}?format=geojson&{query}")
+        if raw_geo:
+            data = json.loads(raw_geo.decode())
+            mmi_by_id = {f["id"]: f["properties"].get("mmi") for f in data["features"]}
+
+        raw_csv = query_url(f"{BASE_URL}?format=csv&{query}")
+        if raw_csv:
+            df_csv = pd.read_csv(io.StringIO(raw_csv.decode()))
+            df_csv["mmi"] = df_csv["id"].map(mmi_by_id)
+            df_csv["alert"] = alert
+            chunks.append(df_csv)
+            print(f"  Found {len(df_csv)} events with alert '{alert}'")
+    return pd.concat(chunks, ignore_index=True) if chunks else pd.DataFrame()
 
 def fetch_period_data(start_year, end_year, min_mag=4.8):
     """Fetch global seismic events with ShakeMap & sensor errors in yearly chunks."""
@@ -105,7 +103,7 @@ def main():
     print("=== Starting USGS ComCat Data Acquisition ===")
     
     # Fetch high impact events across 2000-2024
-    df_high = fetch_high_impact_geojson()
+    df_high = fetch_high_impact_events()
     
     # Fetch modern period (2018-2024)
     df_modern = fetch_period_data(2018, 2024, min_mag=4.8)

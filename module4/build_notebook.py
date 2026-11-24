@@ -246,7 +246,8 @@ assert AUG_FEATURES[:len(BASE_FEATURES)] == BASE_FEATURES, "Augmented must exten
 
 cols = base["train"].columns
 COORD_COLS = ["latitude", "longitude", "depth", "lat_rad", "lon_rad", "x_ecef", "y_ecef", "z_ecef"]
-SENSOR_RAW_COLS = ["nst", "gap", "dmin", "rms", "horizontalError", "depthError", "magError"]
+SENSOR_RAW_COLS = [c for c in ["nst", "gap", "dmin", "rms", "horizontalError", "depthError", "magError"]
+                   if c in cols]   # Module 1 may exclude some (magError is dropped as leaky)
 SCALED_SENSOR_COLS = [c for c in cols if c.endswith("_scaled")]
 MISSING_COLS = [c for c in cols if c.startswith("missing_")]
 MAGTYPE_COLS = [c for c in cols if c.startswith("magType_")]

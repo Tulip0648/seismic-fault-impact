@@ -1,46 +1,46 @@
 {
   "fast_mode": false,
   "m3_source": "Module 3 delivered (module3/artifacts/oof_predictions)",
-  "deployed_model": "Random Forest (Base)",
-  "shap_model": "LightGBM",
+  "deployed_model": "LightGBM (Base)",
+  "shap_model": "XGBoost",
   "stacking_meta": "Shallow LightGBM",
   "headline_test": {
-    "best_aug": "LightGBM",
-    "best_base": "Random Forest",
-    "cv_aug": 0.5414328050198236,
-    "cv_base": 0.5724663905113461,
-    "mean_aug_5x2": 0.5305408710265741,
-    "mean_base_5x2": 0.5358846224334496,
-    "t": 1.3166430678440721,
-    "p_t": 0.24507651246695053,
-    "p_wilcoxon": 0.431640625,
-    "delta": -0.0053437514068754854,
-    "verdict": "no significant difference",
+    "best_aug": "Random Forest",
+    "best_base": "LightGBM",
+    "cv_aug": 0.4235953868979248,
+    "cv_base": 0.4541821541355528,
+    "mean_aug_5x2": 0.42233756663752625,
+    "mean_base_5x2": 0.4380358913882235,
+    "t": -2.6783603172141794,
+    "p_t": 0.04390629064586822,
+    "p_wilcoxon": 0.322265625,
+    "delta": -0.015698324750697268,
+    "verdict": "Augmented significantly worse",
     "significant_improvement": false
   },
   "latency_ms": {
-    "median_ms": 53.5027000005357,
-    "p95_ms": 71.09463499873522,
-    "max_ms": 110.53370000445284
+    "median_ms": 7.850400000279478,
+    "p95_ms": 14.010810000013395,
+    "max_ms": 22.04349999965416
   },
   "best_by_cv": [
     {
-      "Specific Model": "Random Forest",
+      "Specific Model": "LightGBM",
       "Feature Set": "Base",
-      "CV Macro F1": 0.5724663905113461,
-      "Macro F1": 0.5359218581066368
+      "CV Macro F1": 0.4541821541355528,
+      "Macro F1": 0.4349153624153623
     },
     {
       "Specific Model": "CatBoost",
       "Feature Set": "Base",
-      "CV Macro F1": 0.5563783020546336,
-      "Macro F1": 0.5605742203185651
+      "CV Macro F1": 0.4453509482004776,
+      "Macro F1": 0.43501576080303583
     },
     {
-      "Specific Model": "LightGBM",
+      "Specific Model": "Stacking Classifier (Shallow LightGBM meta)",
       "Feature Set": "Augmented",
-      "CV Macro F1": 0.5414328050198236,
-      "Macro F1": 0.5760093899876058
+      "CV Macro F1": 0.42949034650178275,
+      "Macro F1": 0.44025013466997526
     }
   ]
 }

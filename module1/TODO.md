@@ -222,7 +222,7 @@ print(df_train.shape, df_train.columns.tolist())
 | `rms` | `float64` | Wave travel time residual in seconds (scaled) |
 | `horizontalError`| `float64` | Location horizontal error in km (scaled) |
 | `depthError` | `float64` | Depth error in km (scaled) |
-| `magError` | `float64` | Magnitude estimation error (scaled) |
+| ~~`magError`~~ | — | **Excluded** (label leakage via missingness; see notebook section 3b) |
 | `pca_sensor_1` | `float64` | 1st Principal Component of sensor features |
 | `pca_sensor_2` | `float64` | 2nd Principal Component of sensor features |
 | `pca_sensor_3` | `float64` | 3rd Principal Component of sensor features |

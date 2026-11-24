@@ -1,52 +1,52 @@
 # Module 4 — SHAP Explainability Report
 
-Model explained: **LightGBM (Augmented)** — the best gradient booster by 5-fold CV Macro F1
-(0.5414). Explainer: `shap.TreeExplainer` (exact TreeSHAP), 666 test events,
+Model explained: **XGBoost (Augmented)** — the best gradient booster by 5-fold CV Macro F1
+(0.4079). Explainer: `shap.TreeExplainer` (exact TreeSHAP), 666 test events,
 values in log-odds space per class.
 
 ## Global importance
-Top-5 features: `missing_depthError`, `mag`, `x_ecef`, `horizontalError`, `missing_magError`.
+Top-5 features: `mag`, `z_ecef`, `x_ecef`, `horizontalError`, `gap`.
 
 | feature | rank | yellow | orange | red | total |
 |---|---|---|---|---|---|
-| missing_depthError | 1 | 0.1603 | 0.0000 | 0.0076 | 0.7479 |
-| mag | 2 | 0.1663 | 0.0699 | 0.0741 | 0.7184 |
-| x_ecef | 3 | 0.0221 | 0.3063 | 0.0793 | 0.4932 |
-| horizontalError | 4 | 0.2852 | 0.0095 | 0.0000 | 0.3395 |
-| missing_magError | 5 | 0.0056 | 0.0000 | 0.1249 | 0.2955 |
-| pca_sensor_1 | 6 | 0.0405 | 0.1830 | 0.0142 | 0.2428 |
-| gap | 7 | 0.0725 | 0.0830 | 0.0569 | 0.2153 |
-| dmin | 8 | 0.0624 | 0.0448 | 0.0110 | 0.1814 |
-| rms | 9 | 0.0217 | 0.1259 | 0.0117 | 0.1743 |
-| pca_sensor_2 | 10 | 0.0767 | 0.0852 | 0.0013 | 0.1704 |
-| gmm_prob_6 | 11 | 0.0140 | 0.0072 | 0.1260 | 0.1576 |
-| gmm_prob_15 | 12 | 0.0537 | 0.0610 | 0.0022 | 0.1412 |
-| pca_sensor_3 | 13 | 0.0495 | 0.0688 | 0.0068 | 0.1390 |
-| latitude | 14 | 0.0106 | 0.0822 | 0.0163 | 0.1355 |
-| depth | 15 | 0.0396 | 0.0621 | 0.0034 | 0.1259 |
+| mag | 1 | 0.0863 | 0.2428 | 0.5548 | 1.5999 |
+| z_ecef | 2 | 0.0162 | 0.0920 | 0.7685 | 0.9395 |
+| x_ecef | 3 | 0.0647 | 0.4663 | 0.0363 | 0.8422 |
+| horizontalError | 4 | 0.1762 | 0.1155 | 0.0374 | 0.7471 |
+| gap | 5 | 0.0686 | 0.2204 | 0.2328 | 0.6020 |
+| latitude | 6 | 0.0225 | 0.0695 | 0.3536 | 0.5558 |
+| depth | 7 | 0.0488 | 0.1381 | 0.0482 | 0.4436 |
+| dmin | 8 | 0.0846 | 0.0367 | 0.1052 | 0.4315 |
+| gmm_prob_9 | 9 | 0.0419 | 0.0195 | 0.0391 | 0.3747 |
+| pca_sensor_3 | 10 | 0.0428 | 0.1254 | 0.0850 | 0.3647 |
+| gmm_prob_19 | 11 | 0.0273 | 0.0680 | 0.0853 | 0.3347 |
+| gmm_prob_15 | 12 | 0.0598 | 0.2239 | 0.0105 | 0.3142 |
+| dist_to_nearest_fault_km | 13 | 0.0403 | 0.0762 | 0.0619 | 0.2836 |
+| rms | 14 | 0.0749 | 0.1326 | 0.0411 | 0.2831 |
+| gmm_prob_10 | 15 | 0.0370 | 0.0551 | 0.1096 | 0.2804 |
 
-Share of total mean |SHAP| contributed by the Module 2 fault features (DBSCAN + GMM): **24.1%**; by sensor PCA: **8.9%**.
+Share of total mean |SHAP| contributed by the Module 2 fault features (DBSCAN + GMM): **31.3%**; by sensor PCA: **6.1%**.
 
 ![Global importance](figures/shap_global_importance.png)
 
 ## Fault-feature effects
-| feature | rank (of 64) | mean |SHAP| total | Spearman(value, SHAP orange+red) |
+| feature | rank (of 61) | mean |SHAP| total | Spearman(value, SHAP orange+red) |
 |---|---|---|---|
-| mag | 2 | 0.7184 | 0.4130 |
-| depth | 15 | 0.1259 | -0.2648 |
-| is_background_noise | 63 | 0.0000 | nan |
-| dist_to_nearest_fault_km | 18 | 0.1161 | 0.7807 |
-| gmm_log_likelihood | 17 | 0.1162 | -0.1237 |
-| gmm_prob_6 | 11 | 0.1576 | -0.6579 |
-| gmm_prob_15 | 12 | 0.1412 | 0.6736 |
+| mag | 1 | 1.5999 | 0.6469 |
+| depth | 7 | 0.4436 | -0.7650 |
+| is_background_noise | 52 | 0.0056 | 0.5095 |
+| dist_to_nearest_fault_km | 13 | 0.2836 | 0.6631 |
+| gmm_log_likelihood | 17 | 0.2245 | -0.4364 |
+| gmm_prob_9 | 9 | 0.3747 | -0.5570 |
+| gmm_prob_19 | 11 | 0.3347 | 0.2121 |
 
-- `mag` — rank 2; higher values push towards orange/red.
-- `depth` — rank 15; higher values push away from orange/red.
-- `is_background_noise` — rank 63; constant on the test set, so no direction can be estimated.
-- `dist_to_nearest_fault_km` — rank 18; higher values push towards orange/red.
+- `mag` — rank 1; higher values push towards orange/red.
+- `depth` — rank 7; higher values push away from orange/red.
+- `is_background_noise` — rank 52; higher values push towards orange/red.
+- `dist_to_nearest_fault_km` — rank 13; higher values push towards orange/red.
 - `gmm_log_likelihood` — rank 17; higher values push away from orange/red.
-- `gmm_prob_6` — rank 11; higher values push away from orange/red.
-- `gmm_prob_15` — rank 12; higher values push towards orange/red.
+- `gmm_prob_9` — rank 9; higher values push away from orange/red.
+- `gmm_prob_19` — rank 11; higher values push towards orange/red.
 
 ![Dependence plots](figures/shap_dependence_fault_features.png)
 

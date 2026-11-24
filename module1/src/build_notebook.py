@@ -223,6 +223,36 @@ for bar in bars:
 plt.tight_layout()
 plt.show()"""))
 
+    # Leakage guard: missingness must not depend on the target
+    cells.append(nbf.v4.new_markdown_cell("""### 3b. Leakage guard: is missingness tied to the alert class?
+A missing value should reflect the sensor network, not the label. If one alert class is missing a column far more often than another, a model can predict the class from the *missingness flag* (or from the imputed median value) alone: a data-collection artifact, not seismology.
+
+History: an earlier version of the download script fetched non-green events through a GeoJSON query that has no `horizontalError` / `depthError` / `magError`, so those columns were missing for ~95% of red events and 0% of green ones, and `missing_depthError` became the model's #1 feature. The download now uses the CSV endpoint for every class. After that fix, `magError` is still missing for ~4% of green vs ~28-38% of non-green events: older events often lack a magnitude error, and by the sampling design all pre-2018 events are non-green. So `magError` is **excluded** (`LEAKY_EXCLUDE`), and this cell fails loudly if any remaining sensor column shows such a gap."""))
+
+    cells.append(nbf.v4.new_code_cell("""# Cell 5b: Missingness-by-class leakage guard
+MAX_MISSING_GAP = 0.20         # max allowed spread (between classes) of a column's missing rate
+LEAKY_EXCLUDE = ["magError"]   # missingness tracks event age, which the sampling design ties to the class
+
+missing_by_class = df_clean.groupby("alert")[sensor_features].apply(lambda g: g.isnull().mean())
+missing_by_class = missing_by_class.reindex(["green", "yellow", "orange", "red"])
+display((missing_by_class * 100).round(1))
+spread = missing_by_class.max() - missing_by_class.min()
+for col in LEAKY_EXCLUDE:
+    print(f"Excluded {col}: missing-rate spread between classes = {spread[col]:.1%}")
+
+# Drop excluded columns everywhere (also from df_clean, so no later module sees them as features)
+sensor_features = [c for c in sensor_features if c not in LEAKY_EXCLUDE]
+df_clean = df_clean.drop(columns=LEAKY_EXCLUDE)
+
+offenders = spread[sensor_features][spread[sensor_features] > MAX_MISSING_GAP]
+assert offenders.empty, (
+    f"Missingness depends on the alert class for {list(offenders.index)} "
+    f"(spread {[round(v, 2) for v in offenders.values]}): the missing_* flags would leak the label. "
+    "Check that every class is downloaded through the same endpoint."
+)
+print(f"OK: sensor features {sensor_features}; missing rates differ by at most "
+      f"{spread[sensor_features].max():.1%} between alert classes.")"""))
+
     # Cell 10: Markdown Spatial Transforms
     cells.append(nbf.v4.new_markdown_cell("""---
 ## 4. Geospatial Coordinate Transformations (Spherical & 3D ECEF)
@@ -372,7 +402,7 @@ print(f"Categorical features: {ohe_col_names}")"""))
     # Cell 16: Markdown PCA
     cells.append(nbf.v4.new_markdown_cell("""---
 ## 7. Dimensionality Reduction (Sensor PCA)
-Sensor error metrics (`horizontalError`, `depthError`, `magError`, `gap`, `dmin`, `rms`) exhibit significant multicollinearity. We perform Principal Component Analysis (PCA) on the scaled sensor features to extract orthogonal variance components explaining $\\ge 85\\%$ cumulative variance."""))
+Sensor error metrics (`nst`, `horizontalError`, `depthError`, `gap`, `dmin`, `rms`; `magError` is excluded, see 3b) exhibit significant multicollinearity. We perform Principal Component Analysis (PCA) on the scaled sensor features to extract orthogonal variance components explaining $\\ge 85\\%$ cumulative variance."""))
 
     # Cell 17: Code PCA
     cells.append(nbf.v4.new_code_cell("""# Cell 9: Principal Component Analysis on Sensor Features
@@ -420,7 +450,7 @@ We inspect the Pearson correlation structure between spatial coordinates, ground
 
     # Cell 19: Code Correlation Analysis
     cells.append(nbf.v4.new_code_cell("""# Cell 10: Feature Correlation Matrix Heatmap
-corr_cols = ["latitude", "longitude", "depth", "mag", "mmi", "gap", "dmin", "rms", "horizontalError", "depthError", "magError"]
+corr_cols = ["latitude", "longitude", "depth", "mag", "mmi", "gap", "dmin", "rms", "horizontalError", "depthError"]
 corr_df = train_df[corr_cols].corr()
 
 fig, ax = plt.subplots(figsize=(9, 7))

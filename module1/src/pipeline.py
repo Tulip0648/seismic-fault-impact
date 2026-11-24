@@ -64,7 +64,7 @@ def generate_eda_figures(df_raw: pd.DataFrame, df_train: pd.DataFrame, pca: PCA,
     plt.close()
 
     # 2. Missingness Analysis
-    sensor_cols = ["nst", "gap", "dmin", "rms", "horizontalError", "depthError", "magError"]
+    sensor_cols = ["nst", "gap", "dmin", "rms", "horizontalError", "depthError"]
     missing_pct = df_raw[sensor_cols].isnull().mean() * 100
     fig, ax = plt.subplots(figsize=(9, 4.5))
     bars = ax.barh(sensor_cols, missing_pct, color="#3498db", edgecolor="black", alpha=0.85)
@@ -115,7 +115,7 @@ def generate_eda_figures(df_raw: pd.DataFrame, df_train: pd.DataFrame, pca: PCA,
     plt.close()
 
     # 5. Correlation Heatmap
-    corr_cols = ["latitude", "longitude", "depth", "mag", "mmi", "gap", "dmin", "rms", "horizontalError", "depthError", "magError"]
+    corr_cols = ["latitude", "longitude", "depth", "mag", "mmi", "gap", "dmin", "rms", "horizontalError", "depthError"]
     corr_df = df_train[corr_cols].corr()
     fig, ax = plt.subplots(figsize=(10, 8))
     sns.heatmap(corr_df, annot=True, fmt=".2f", cmap="coolwarm", center=0, ax=ax, cbar_kws={'shrink': 0.8})
@@ -142,6 +142,9 @@ def run_pipeline(raw_path: str = "data/raw/usgs_comcat_raw.parquet",
         df["alert"].isin(["green", "yellow", "orange", "red"])
     )
     df = df[valid_mask].reset_index(drop=True)
+    # magError's missingness tracks event age, which the sampling design ties to the alert class
+    # (all pre-2018 events are non-green), so it would leak the label. Drop it before anything else.
+    df = df.drop(columns=["magError"])
     print(f"Post-range validation shape: {df.shape}")
 
     # 2. Compute 3D ECEF & spherical radians
@@ -171,7 +174,8 @@ def run_pipeline(raw_path: str = "data/raw/usgs_comcat_raw.parquet",
           f"Test={len(test_df)} ({len(test_df)/len(df)*100:.1f}%)")
 
     # 5. Missingness Handling & Imputation
-    sensor_features = ["nst", "gap", "dmin", "rms", "horizontalError", "depthError", "magError"]
+    # magError excluded: its missingness tracks event age, which the sampling design ties to the alert class
+    sensor_features = ["nst", "gap", "dmin", "rms", "horizontalError", "depthError"]
     
     # Add missing indicators
     for col in sensor_features:
@@ -350,7 +354,7 @@ This transformation allows downstream clustering (DBSCAN / GMM in Module 2) to o
 
 ## 4. Missingness Auditing & Median Imputation
 - `nst` (number of stations) showed the highest missingness (~69.8%), as rapid global alerts often omit station counts until manual review.
-- Sensor error features (`horizontalError`, `depthError`, `magError`) had missingness rates of 7% to 11%.
+- `horizontalError` and `depthError` are missing at similar rates in every alert class (checked per class). `magError` was excluded: it is missing for ~4% of green vs ~28-38% of non-green events (older events lack it), so its missingness would leak the label.
 - Missingness flags (`missing_<col>`) were created to preserve information about missing sensor channels.
 - Median imputation was fit strictly on the **training set** to prevent data leakage.
 
@@ -359,7 +363,7 @@ This transformation allows downstream clustering (DBSCAN / GMM in Module 2) to o
 ---
 
 ## 5. Dimensionality Reduction: Sensor PCA
-Principal Component Analysis was performed on the RobustScaled sensor error metrics (`nst`, `gap`, `dmin`, `rms`, `horizontalError`, `depthError`, `magError`):
+Principal Component Analysis was performed on the RobustScaled sensor error metrics (`nst`, `gap`, `dmin`, `rms`, `horizontalError`, `depthError`):
 
 | Principal Component | Explained Variance (%) | Cumulative Variance (%) |
 |---|---|---|

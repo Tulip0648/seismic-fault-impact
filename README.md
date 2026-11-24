@@ -206,7 +206,8 @@ Because team members work on different modules in parallel, notebooks communicat
 - Files: `train_base.parquet`, `val_base.parquet`, `test_base.parquet`
 - Contains:
   - Coordinate representations: `latitude`, `longitude`, `depth`, `lat_rad`, `lon_rad`, `x_ecef`, `y_ecef`, `z_ecef`
-  - Sensor & error metrics: `mag`, `nst`, `gap`, `dmin`, `rms`, `horizontalError`, `depthError`, `magError` (imputed and standardized)
+  - Sensor & error metrics: `mag`, `nst`, `gap`, `dmin`, `rms`, `horizontalError`, `depthError` (imputed and standardized), plus `missing_*` flags
+  - `magError` is deliberately excluded: its missingness tracks event age, which the sampling design ties to the alert class, so it would leak the label (see the leakage guard in Module 1, section 3b)
   - Categorical encodings: `magType_*`
   - Dimensionality reduction: `pca_sensor_1`, `pca_sensor_2`, `pca_sensor_3`
   - Targets: `alert` (`green`, `yellow`, `orange`, `red`), `mmi`

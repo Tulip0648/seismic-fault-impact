@@ -5,7 +5,7 @@
     "ecef": {
       "n_clusters": 19,
       "noise_ratio": 0.06988727858293076,
-      "silhouette": 0.10812446556784402,
+      "silhouette": 0.10812446556784407,
       "davies_bouldin": 0.6491556936637964,
       "eps_km": 573.3086273008672,
       "eps_status": "knee",

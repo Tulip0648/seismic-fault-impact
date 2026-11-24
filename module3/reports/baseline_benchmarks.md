@@ -1,6 +1,6 @@
 # Module 3: Supervised Baseline Benchmarks (Stage 1 Base vs. Stage 2 Augmented)
 
-All models were evaluated under identical **Stratified 5-Fold Cross-Validation** (`RANDOM_STATE = 42`) on the Module 1 **Base** split (39 features, 3,105 train / 666 test) and the Module 2 **Augmented** split (64 features: Base + DBSCAN fault distances + 20 GMM posteriors).
+All models were evaluated under identical **Stratified 5-Fold Cross-Validation** (`RANDOM_STATE = 42`) on the Module 1 **Base** split (36 features, 3,105 train / 666 test) and the Module 2 **Augmented** split (61 features: Base + DBSCAN fault distances + 20 GMM posteriors).
 
 ---
 
@@ -8,16 +8,16 @@ All models were evaluated under identical **Stratified 5-Fold Cross-Validation**
 
 | Model Family | Model | Base Macro F1 | Aug Macro F1 | Δ Macro F1 | Base Weighted F1 | Aug Weighted F1 | Base ROC-AUC | Aug ROC-AUC | Δ ROC-AUC |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Linear (P1) | Logistic Regression (Best) | 0.4831 | 0.4555 | -0.0276 | 0.9125 | 0.9175 | 0.8965 | 0.8957 | -0.0008 |
-| Probabilistic (P2) | Gaussian Naive Bayes | 0.3603 | 0.3117 | -0.0486 | 0.8922 | 0.8261 | 0.7502 | 0.7305 | -0.0197 |
-| Probabilistic (P2) | Linear Discriminant Analysis (LDA) | 0.4838 | 0.4589 | -0.0249 | 0.9473 | 0.9457 | 0.9335 | 0.9423 | +0.0088 |
-| Probabilistic (P2) | Quadratic Discriminant Analysis (QDA) | 0.4452 | 0.4102 | -0.0350 | 0.9248 | 0.8784 | 0.8553 | 0.8071 | -0.0482 |
-| Instance (P3) | k-Nearest Neighbors (k-NN) | 0.4925 | 0.4758 | -0.0167 | — | 0.9463 | 0.8296 | 0.7787 | -0.0509 |
-| Kernel (P3) | Support Vector Classifier (SVC) | 0.4692 | 0.4888 | +0.0196 | — | 0.9458 | 0.9601 | 0.9497 | -0.0104 |
+| Linear (P1) | Logistic Regression (Best) | 0.3456 | 0.3407 | -0.0049 | 0.8181 | 0.8217 | 0.8179 | 0.7744 | -0.0436 |
+| Probabilistic (P2) | Gaussian Naive Bayes | 0.2843 | 0.2675 | -0.0167 | 0.8411 | 0.7978 | 0.7840 | 0.6984 | -0.0855 |
+| Probabilistic (P2) | Linear Discriminant Analysis (LDA) | 0.3249 | 0.3664 | +0.0415 | 0.8850 | 0.8916 | 0.8346 | 0.8332 | -0.0013 |
+| Probabilistic (P2) | Quadratic Discriminant Analysis (QDA) | 0.3185 | 0.3615 | +0.0430 | 0.8726 | 0.8548 | 0.8157 | 0.7759 | -0.0398 |
+| Instance (P3) | k-Nearest Neighbors (k-NN) | 0.3324 | 0.3633 | +0.0308 | — | 0.8970 | 0.6943 | 0.6825 | -0.0118 |
+| Kernel (P3) | Support Vector Classifier (SVC) | 0.3623 | 0.3742 | +0.0120 | — | 0.8867 | 0.9165 | 0.9131 | -0.0034 |
 
 ### Person 1 Logistic Regression Penalty Breakdown & Calibration
-- **Best Base LR**: L2 (`saga`, `C=10.0`) — CV Macro F1 `0.4831`, ROC-AUC `0.8965`, Log Loss `0.3775`, Latency `2.42 ms/batch` (`0.0036 ms/sample`).
-- **Best Augmented LR**: L1 (`saga`, `C=0.1`) — CV Macro F1 `0.4555`, Weighted F1 `0.9175` (`+0.0050`), ROC-AUC `0.8957`, Log Loss `0.3324` (`-0.0451`), Latency `2.56 ms/batch` (`0.0038 ms/sample`).
+- **Best Base LR**: L2 (`C=10`) — CV Macro F1 `0.3456`, Weighted F1 `0.8181`, ROC-AUC `0.8179`.
+- **Best Augmented LR**: L2 (`C=10`) — CV Macro F1 `0.3407`, Weighted F1 `0.8217`, ROC-AUC `0.7744`.
 
 ---
 
@@ -25,8 +25,8 @@ All models were evaluated under identical **Stratified 5-Fold Cross-Validation**
 
 | Model | Base CV RMSE | Aug CV RMSE | Δ CV RMSE | Base CV R² | Aug CV R² | Δ CV R² | Base Test R² | Aug Test R² |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Ridge | 1.5601 | 1.4123 | -0.1477 | 0.5135 | 0.6013 | +0.0879 | 0.5095 | 0.6031 |
-| Lasso | 1.5600 | 1.4121 | -0.1479 | 0.5135 | 0.6015 | +0.0880 | 0.5097 | 0.6023 |
+| Ridge | 1.6306 | 1.4674 | -0.1631 | 0.4687 | 0.5698 | +0.1011 | 0.4688 | 0.5652 |
+| Lasso | 1.6305 | 1.4667 | -0.1638 | 0.4687 | 0.5702 | +0.1015 | 0.4691 | 0.5638 |
 
 ---
 
@@ -34,18 +34,18 @@ All models were evaluated under identical **Stratified 5-Fold Cross-Validation**
 
 | Role / Family | Model (Augmented) | Train OOF Macro F1 | Train OOF ROC-AUC | Train OOF Log Loss | Test Macro F1 | Test Weighted F1 | Test ROC-AUC | Test Log Loss |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| Linear (P1) | Logistic Regression (L1, C=0.1) | 0.4545 | 0.8949 | 0.3324 | 0.4500 | 0.9154 | 0.9396 | 0.2790 |
-| Probabilistic (P2) | LDA (eigen, shrinkage=auto) | 0.4625 | 0.9153 | 0.6647 | 0.4724 | 0.9421 | 0.9492 | 0.6300 |
-| Kernel (P3) | SVC (poly deg=2, C=1.0) | 0.4454 | 0.9483 | 0.1665 | 0.4693 | 0.9475 | 0.9601 | 0.1623 |
-| Instance (P3) | k-NN (k=3, distance, euclidean) | 0.4776 | 0.8636 | 1.0142 | 0.4461 | 0.9415 | 0.8190 | 1.0880 |
+| Linear (P1) | Logistic Regression (L2, C=10) | 0.3393 | 0.7768 | 0.7817 | 0.3207 | 0.8202 | 0.8605 | 0.6014 |
+| Probabilistic (P2) | LDA (eigen, shrinkage=0.5) | 0.3681 | 0.8270 | 0.5075 | 0.3548 | 0.9002 | 0.8775 | 0.3643 |
+| Kernel (P3) | SVC (rbf, C=10) | 0.2978 | 0.9125 | 0.2561 | 0.2950 | 0.8843 | 0.9076 | 0.2669 |
+| Instance (P3) | k-NN (k=3, weights=distance, metric=euclidean) | 0.3627 | 0.7989 | 1.8920 | 0.3821 | 0.9011 | 0.7888 | 1.9439 |
 
 ---
 
 ## 4. Key Takeaways & Interpretability Findings
-1. **Non-linear vs. Linear Response to Tectonic Features**: Adding 25 DBSCAN/GMM features directly improved non-linear kernel **SVC** Macro F1 (`+0.0196`, reaching the highest Augmented Macro F1 of `0.4888`), while linear/probabilistic/distance baselines experienced mild high-dimensional variance on rare `orange`/`red` classes (59 and 22 train events respectively).
-2. **Calibration Gain for Stacking**: Under L1 regularization (`C=0.1`), Augmented Logistic Regression improved **Weighted F1 (`+0.0050`)**, reduced **CV Log Loss (`-0.0451`)** and **Test Log Loss (`0.2846 -> 0.2790`)**, and preserved non-zero recall on `orange` and `red` alerts.
-3. **Substantial Continuous Shaking (`mmi`) Gain**: Module 2 tectonic features boosted both Ridge and Lasso CV $R^2$ by **`+0.088`** (`0.5135 -> 0.6015`) and reduced RMSE by **`-0.148`**, with holdout Test $R^2$ rising **`+0.093`**.
-4. **Statistical Significance of Fault Features**: Holdout permutation tests (30 repeats, $\alpha = 0.05$) confirmed **13/25** Module 2 features are statistically significant for PAGER `alert` ROC-AUC (`gmm_prob_9`, `gmm_prob_4`, and `dist_to_nearest_fault_km` all $p < 0.0001$), and **20/25** are significant for continuous `mmi` $R^2$ (`gmm_prob_15` ranks #1 overall with $\Delta R^2 = +0.1044$, $p < 0.0001$).
+1. **Fault features vs. alert classification**: Augmented features raised CV Macro F1 for 4/6 model families (Linear Discriminant Analysis (LDA) +0.0415, Quadratic Discriminant Analysis (QDA) +0.0430, k-Nearest Neighbors (k-NN) +0.0308, Support Vector Classifier (SVC) +0.0120). Best Augmented model: **Support Vector Classifier (SVC)** (Macro F1 `0.3742`). Rare classes stay hard (59 orange / 22 red training events).
+2. **Leakage fix (data)**: Module 1 now downloads every alert class through the same USGS endpoint and excludes `magError`, so `missing_*` flags no longer encode the alert class. Scores are lower than in earlier runs because the earlier ones partly measured that artifact.
+3. **Continuous shaking (`mmi`)**: Module 2 features raised Ridge CV $R^2$ from `0.4687` to `0.5698` (+0.1011); holdout test $R^2$ `0.4688` -> `0.5652`.
+4. **Permutation tests (30 repeats, $\alpha = 0.05$)**: 20/25 Module 2 features are significant for PAGER `alert` ROC-AUC and 16/25 for `mmi` $R^2$; top `mmi` feature overall: `mag` ($\Delta R^2 = +0.1143$).
 
 ---
 
